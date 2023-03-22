@@ -210,7 +210,41 @@
           <ul id="sections-list">
             <li>
               <section class="section">
-                <header class="section-header"></header>
+                <header class="section-header">
+                  <div class="collapse-list">
+                    <svg width="24" height="24">
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        d="M16 10l-4 4-4-4"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div class="section-info">
+                    <button class="section-name">
+                      <span>project name</span>
+                    </button>
+                    <span>5</span>
+                  </div>
+                  <button class="todo-more-options">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                    >
+                      <g
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        transform="translate(3 10)"
+                      >
+                        <circle cx="2" cy="2" r="2"></circle>
+                        <circle cx="9" cy="2" r="2"></circle>
+                        <circle cx="16" cy="2" r="2"></circle>
+                      </g>
+                    </svg>
+                  </button>
+                </header>
                 <ul class="tasks-list">
                   <li class="todo">
                     <button class="checkbox-container">
@@ -292,13 +326,121 @@
                       </div>
                     </div>
                   </li>
+                  <li>
+                    <button class="add-todo-btn">
+                      <span>
+                        <svg width="13" height="13">
+                          <path
+                            d="M6 6V.5a.5.5 0 011 0V6h5.5a.5.5 0 110 1H7v5.5a.5.5 0 11-1 0V7H.5a.5.5 0 010-1H6z"
+                            fill="currentColor"
+                            fill-rule="evenodd"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span>Add task</span>
+                    </button>
+                  </li>
                 </ul>
               </section>
-              <button></button>
+              <button class="add-section-btn">Add a section</button>
             </li>
           </ul>
         </div>
       </main>
+    </div>
+    <div class="modal-form-container">
+      <form class="modal-form form">
+        <div class="form-controls-container">
+          <div class="todo-input-text">
+            <input
+              class="todo-title-input"
+              type="text"
+              placeholder="Task Name"
+            />
+            <input
+              class="todo-desc-input"
+              type="text"
+              placeholder="Description"
+            />
+          </div>
+          <div class="flex-row">
+            <div class="input-container">
+              <button id="duedate-input" class="todo-input-btn">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  class="no_due_date"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M12 2a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2h8zm0 1H4a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V4a1 1 0 00-1-1zm-1.25 7a.75.75 0 110 1.5.75.75 0 010-1.5zm.75-5a.5.5 0 110 1h-7a.5.5 0 010-1h7z"
+                  ></path>
+                </svg>
+                <span>Date</span>
+              </button>
+              <button class="clear-input clear-date" title="Remove duedate">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M11.854 11.854a.5.5 0 000-.708L8.707 8l3.147-3.146a.5.5 0 00-.708-.708L8 7.293 4.854 4.146a.5.5 0 10-.708.708L7.293 8l-3.147 3.146a.5.5 0 00.708.708L8 8.707l3.146 3.147a.5.5 0 00.708 0z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+              </button>
+              <input type="date" />
+            </div>
+            <div class="input-container">
+              <button id="time-input" class="todo-input-btn">
+                <span>Time</span>
+              </button>
+              <button class="clear-input clear-time" title="Remove duetime">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M11.854 11.854a.5.5 0 000-.708L8.707 8l3.147-3.146a.5.5 0 00-.708-.708L8 7.293 4.854 4.146a.5.5 0 10-.708.708L7.293 8l-3.147 3.146a.5.5 0 00.708.708L8 8.707l3.146 3.147a.5.5 0 00.708 0z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+              </button>
+              <input type="time" />
+            </div>
+            <select>
+              <option value="1">Priority 1</option>
+              <option value="2">Priority 2</option>
+              <option value="3">Priority 3</option>
+              <option value="4" selected>Priority 4</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-submit-btns">
+          <div class="input-row flex-row">
+            <select class="project-selector">
+              <option>Inbox</option>
+              <option></option>
+            </select>
+          </div>
+          <div>
+            <button class="cancel-btn input-btn">Cancel</button>
+            <button class="add-task-btn input-btn">Add Task</button>
+          </div>
+        </div>
+      </form>
     </div>
     <footer></footer>
   </body>
