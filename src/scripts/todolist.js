@@ -1,18 +1,16 @@
-import Project from "./project.js";
+import { Project } from "./project.js";
 import "../style.css";
 
-const TodoList = (() => {
-  const projects = [new Project("inbox")];
+const TodoList = {
+  projects: [new Project("Inbox")],
 
-  const addProject = (project) => {
-    projects.push(project);
-  };
+  addProject(project) {
+    this.projects.push(project);
+  },
 
-  const removeProject = (index) => {
-    projects.splice(index, 1);
-  };
-
-  return { projects, addProject, removeProject };
-})();
+  removeProject(index) {
+    this.projects.splice(index, 1);
+  },
+};
 
 export default TodoList;

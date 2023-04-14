@@ -1,9 +1,8 @@
 class TodoContainer {
-  #name;
-  constructor({ name = "" }) {
-    this.#name = name;
-    this.todos = [];
-    this.completedTodos = [];
+  constructor(name = "") {
+    this._name = name;
+    this._todos = [];
+    this._completedTodos = [];
   }
 
   insertTodoSorted(array, todo) {
@@ -38,41 +37,47 @@ class TodoContainer {
   }
 
   get name() {
-    return this.#name;
+    return this._name;
   }
 
   set name(name) {
-    if (name) this.#name = name;
+    if (name) this._name = name;
   }
 
   get completedTodosCount() {
-    return this.completedTodos.length;
+    return this._completedTodos.length;
   }
 
   get todosCount() {
-    return this.todos.length;
+    return this._todos.length;
+  }
+
+  get todos() {
+    return this._todos;
+  }
+
+  get completedTodos() {
+    return this._completedTodos;
   }
 }
 
-export default class Project extends TodoContainer {
-  sections = [];
-  #description;
-
-  constructor({ name = "", description = "" }) {
-    super({ name });
-    this.#description = description;
+class Project extends TodoContainer {
+  constructor(name = "", description = "") {
+    super(name);
+    this._description = description;
+    this._sections = [];
   }
 
   addSection(name) {
-    this.sections.push(new TodoContainer({ name }));
+    this._sections.push(new TodoContainer({ name }));
   }
 
   get description() {
-    return this.#description;
+    return this._description;
   }
 
   set description(description) {
-    if (description) this.#description = description;
+    if (description) this._description = description;
   }
 
   get todosCount() {
@@ -91,4 +96,10 @@ export default class Project extends TodoContainer {
       )
     );
   }
+
+  get sections() {
+    return this._sections;
+  }
 }
+
+export { Project, TodoContainer };

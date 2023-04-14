@@ -1,10 +1,4 @@
 export default class Todo {
-  #title;
-  #description;
-  #dueDate;
-  #priority;
-  #project;
-  #completed;
   constructor({
     title = "",
     description = "",
@@ -13,67 +7,67 @@ export default class Todo {
     project = "inbox",
     completed = false,
   }) {
-    this.#title = title;
-    this.#description = description;
-    this.#dueDate = dueDate;
-    this.#priority = priority;
-    this.#project = project;
-    this.#completed = completed;
+    this._title = title;
+    this._description = description;
+    this._dueDate = dueDate;
+    this._priority = priority;
+    this._project = project;
+    this._completed = completed;
   }
 
   get title() {
-    return this.#title;
+    return this._title;
   }
 
   set title(newTitle) {
     if (newTitle.length > 0) {
-      this.#title = newTitle;
+      this._title = newTitle;
     }
   }
 
   get description() {
-    return this.#description;
+    return this._description;
   }
 
   set description(newDescription) {
-    if (typeof newDescription === "string") this.#description = newDescription;
+    if (typeof newDescription === "string") this._description = newDescription;
   }
 
   get dueDate() {
-    return this.#dueDate;
+    return this._dueDate;
   }
 
   set dueDate(newDueDate) {
-    if (newDueDate instanceof Date) this.#dueDate = newDueDate;
+    if (newDueDate instanceof Date) this._dueDate = newDueDate;
   }
 
   get priority() {
-    return this.#priority;
+    return this._priority;
   }
 
   set priority(newPriority) {
     if (newPriority >= 1 && newPriority <= 4) {
-      this.#priority = newPriority;
+      this._priority = newPriority;
     }
   }
 
   get project() {
-    return this.#project;
+    return this._project;
   }
 
   set project(newProject) {
     if (newProject.length > 0) {
-      this.#project = newProject;
+      this._project = newProject;
     }
   }
 
   get completed() {
-    return this.#completed;
+    return this._completed;
   }
 
   set completed(newCompleted) {
     if (typeof newCompleted === "boolean") {
-      this.#completed = newCompleted;
+      this._completed = newCompleted;
     }
   }
 }
