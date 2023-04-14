@@ -28,10 +28,13 @@ html {
 * {
   font-family: myfont;
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 ul {
   padding: 0;
+  width: 100%;
 }
 
 body > header {
@@ -337,6 +340,7 @@ input[type="time"] {
   flex-direction: column;
   gap: 5px;
   flex: 1;
+  width: 100%;
 }
 
 .todo {
@@ -344,6 +348,8 @@ input[type="time"] {
   padding: 8px 0;
   border-bottom: 1px solid rgb(240, 240, 240);
   position: relative;
+  width: 100%;
+  gap: 10px;
 }
 
 #sections-list {
@@ -509,29 +515,45 @@ button.todo-more-options {
 
 .todo-input-text {
   margin-bottom: 10px;
+  overflow: auto;
+  max-height: 200px;
 }
 
-input[type="text"] {
+.todo-input-text > * {
   border: none;
   outline: none;
 }
 
 .todo-title-input,
-.todo-title-input::placeholder {
+.todo-title-input::before {
+  content: "Task name";
   font-size: 20px;
   font-weight: 700;
   line-height: 25px;
 }
 
-.todo-title-input::placeholder,
-.todo-desc-input::placeholder {
+.inline-form .todo-title-input,
+.inline-form .todo-title-input::before {
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.todo-title-input::before,
+.todo-desc-input::before {
   color: rgba(0, 0, 0, 0.4);
 }
 
 .todo-desc-input,
-.todo-desc-input::placeholder {
+.todo-desc-input::before {
+  content: "Description";
   font-size: 13px;
   line-height: 22px;
+}
+
+.inline-form .todo-desc-input,
+.inline-form .todo-desc-input::before {
+  font-size: 12px;
+  line-height: 18px;
 }
 
 .todo-desc-input {
@@ -549,6 +571,7 @@ input[type="text"] {
 
 .input-row {
   justify-content: space-between;
+  padding-top: 15px;
 }
 
 .todo-input-btn {
@@ -556,6 +579,7 @@ input[type="text"] {
   align-items: center;
   border: 1px solid #ddd;
   border-radius: 5px;
+  padding: 5px;
 }
 
 .input-btn {
@@ -602,9 +626,28 @@ input[type="text"] {
 }
 
 .form {
-  box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.35);
   width: 550px;
+  display: none;
+  padding: 15px;
+}
+
+.form > div.flex-row:nth-child(2) {
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modal-form {
+  box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.35);
   border-radius: 5px;
+}
+
+.inline-form {
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.inline-form:focus-within {
+  border: 1px solid rgba(0, 0, 0, 0.4);
 }
 
 .input-container {
