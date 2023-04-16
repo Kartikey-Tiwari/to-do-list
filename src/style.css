@@ -247,7 +247,8 @@ main > div {
   display: flex;
   justify-content: space-between;
   padding: 36px 55px 0;
-  z-index: 100px;
+  z-index: 100;
+  background-color: white;
 }
 
 #main-header h1 {
@@ -311,6 +312,9 @@ input[type="time"] {
   height: 0;
   width: 0;
   border: none;
+  position: absolute;
+  top: 5px;
+  left: 5px;
 }
 
 .due-date {
@@ -322,15 +326,18 @@ input[type="time"] {
   line-height: 16px;
 }
 
-.this-week {
-  color: rgb(105, 47, 194);
+.today {
+  color: rgb(5, 133, 39);
 }
 
 .tomorrow {
   color: rgb(178, 93, 0);
 }
 
-.today,
+.this-week {
+  color: rgb(105, 47, 194);
+}
+
 .overdue {
   color: rgb(209, 69, 59);
 }
@@ -517,6 +524,7 @@ button.todo-more-options {
   margin-bottom: 10px;
   overflow: auto;
   max-height: 200px;
+  position: relative;
 }
 
 .todo-input-text > * {
@@ -525,33 +533,46 @@ button.todo-more-options {
 }
 
 .todo-title-input,
-.todo-title-input::before {
-  content: "Task name";
+.todo-title-input ~ .placeholder {
   font-size: 20px;
   font-weight: 700;
   line-height: 25px;
 }
 
+.placeholder {
+  z-index: -1;
+}
+
+.todo-title-input ~ .placeholder {
+  position: absolute;
+  top: 0;
+}
+
+.todo-desc-input ~ .placeholder {
+  position: absolute;
+  font-weight: normal;
+  top: 27px;
+}
+
 .inline-form .todo-title-input,
-.inline-form .todo-title-input::before {
+.inline-form .todo-title-input ~ .placeholder {
   font-size: 16px;
   line-height: 22px;
 }
 
-.todo-title-input::before,
-.todo-desc-input::before {
+.todo-title-input ~ .placeholder,
+.todo-desc-input ~ .placeholder {
   color: rgba(0, 0, 0, 0.4);
 }
 
 .todo-desc-input,
-.todo-desc-input::before {
-  content: "Description";
+.todo-desc-input .placeholder {
   font-size: 13px;
   line-height: 22px;
 }
 
 .inline-form .todo-desc-input,
-.inline-form .todo-desc-input::before {
+.inline-form .todo-desc-input ~ .placeholder {
   font-size: 12px;
   line-height: 18px;
 }
@@ -569,6 +590,10 @@ button.todo-more-options {
   gap: 5px;
 }
 
+.input-btn-row {
+  position: relative;
+}
+
 .input-row {
   justify-content: space-between;
   padding-top: 15px;
@@ -580,6 +605,11 @@ button.todo-more-options {
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 5px;
+  outline: none;
+}
+
+.todo-input-btn:disabled {
+  cursor: default;
 }
 
 .input-btn {
@@ -588,6 +618,7 @@ button.todo-more-options {
   font-size: 13px;
   border-radius: 5px;
   font-weight: 700;
+  cursor: default;
 }
 
 .cancel-btn {
@@ -601,12 +632,16 @@ button.todo-more-options {
 }
 
 .add-task-btn {
-  background-color: rgba(219, 76, 63, 0.4);
+  background-color: rgb(219, 76, 63);
   color: white;
 }
 
-.add-task-btn.active {
-  background-color: rgb(219, 76, 63);
+.add-task-btn:disabled {
+  background-color: rgba(219, 76, 63, 0.4);
+}
+
+.add-task-btn:not(:disabled):hover {
+  background-color: #b03d32;
 }
 
 .add-task-btn.active:hover {
@@ -654,6 +689,29 @@ button.todo-more-options {
   display: flex;
 }
 
-.clear-input {
+.clear-time-input {
   display: none;
+  align-self: center;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.clear-time-input:hover {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.clear-time-input:active {
+  transform: scale(0.9);
+}
+
+.project-selector {
+  border: none;
+  background-color: white;
+  outline: none;
+  border-radius: 5px;
+  flex: 1;
+}
+
+.project-selector:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }

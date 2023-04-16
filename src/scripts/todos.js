@@ -3,6 +3,7 @@ export default class Todo {
     title = "",
     description = "",
     dueDate = null,
+    dueTime = false,
     priority = 4,
     project = "inbox",
     completed = false,
@@ -10,6 +11,7 @@ export default class Todo {
     this._title = title;
     this._description = description;
     this._dueDate = dueDate;
+    this._dueTime = dueTime;
     this._priority = priority;
     this._project = project;
     this._completed = completed;
@@ -39,6 +41,14 @@ export default class Todo {
 
   set dueDate(newDueDate) {
     if (newDueDate instanceof Date) this._dueDate = newDueDate;
+  }
+
+  get dueTime() {
+    return this._dueTime;
+  }
+
+  set dueTime(newDueTime) {
+    if (newDueTime instanceof Date && this._dueDate) this._dueTime = newDueTime;
   }
 
   get priority() {
