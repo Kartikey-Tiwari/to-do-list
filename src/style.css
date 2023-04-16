@@ -277,6 +277,7 @@ main > div {
   border: 1px solid grey;
   height: 16px;
   width: 16px;
+  box-sizing: content-box;
 }
 
 .checkbox-p1 {
@@ -301,6 +302,19 @@ main > div {
   margin-top: -8px;
   opacity: 0;
   color: grey;
+  transition: all 0.1s ease-in;
+}
+
+.checkbox-p1 svg {
+  color: rgb(209, 69, 59);
+}
+
+.checkbox-p2 svg {
+  color: rgb(235, 137, 9);
+}
+
+.checkbox-p3 svg {
+  color: rgb(36, 111, 224);
 }
 
 .checkbox:hover svg {
@@ -357,6 +371,11 @@ input[type="time"] {
   position: relative;
   width: 100%;
   gap: 10px;
+  transition: all 0.4s linear;
+}
+
+.todo.removed {
+  opacity: 0;
 }
 
 #sections-list {

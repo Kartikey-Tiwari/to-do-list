@@ -13,18 +13,19 @@ class TodoContainer {
       array[array.length - 1].dueDate < todo.dueDate
     ) {
       array.push(todo);
+      return array.length - 1;
     } else {
       for (let i = 0; i < array.length; i++) {
         if (!array.dueDate || array[i].dueDate > todo.dueDate) {
           array.splice(i, 0, todo);
-          break;
+          return i;
         }
       }
     }
   }
 
   addTodo(todo) {
-    this.insertTodoSorted(this.todos, todo);
+    return this.insertTodoSorted(this.todos, todo);
   }
 
   removeTodo(index) {

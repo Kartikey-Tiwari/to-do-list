@@ -19,7 +19,7 @@ inlineForm.querySelector(".input-btn-row").addEventListener("click", (e) => {
   const tag = e.target.tagName;
   if (tag === "BUTTON" || tag === "svg" || tag === "SPAN") {
     const btn = e.target.closest("button");
-    if (!btn.disabled) {
+    if (btn && !btn.disabled) {
       btn.nextElementSibling.showPicker();
     }
   }
@@ -97,14 +97,17 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
       description: desc,
       dueDate: date ? new Date(date + " " + time) : null,
       dueTime: time ? true : false,
-      priority,
+      priority: +priority,
       project,
       completed: false,
     });
-    todoContainer.todos.push(todo);
     if (projectName === curProject) {
       if (!projectNum && !curProjectIndex) {
-        createTodo(sectionsList.children[0].querySelector(".tasks-list"), todo);
+        createTodo(
+          sectionsList.children[0].querySelector(".tasks-list"),
+          todo,
+          todoContainer
+        );
       }
     }
     btn.form.querySelector(".cancel-btn").click();
@@ -396,10 +399,18 @@ const todoHTML = `<li class="todo">
                       </div>
                     </div>
                   </li>`;
-function createTodo(project, todo) {
-  project.insertAdjacentHTML("beforeend", todoHTML);
 
-  const todoElement = project.lastElementChild;
+function createTodo(project, todo, todoContainer) {
+  const idx = todoContainer.addTodo(todo);
+  const div = document.createElement("div");
+  div.innerHTML = todoHTML;
+  project.insertBefore(div.firstElementChild, project.children[idx]);
+
+  const todoElement = project.children[idx];
+  const checkBox = todoElement.querySelector(".checkbox");
+  if (todo.priority < 4) {
+    checkBox.classList.add(`checkbox-p${todo.priority}`);
+  }
 
   todoElement.querySelector(".todo-title").textContent = todo.title;
   todoElement.querySelector(".todo-desc").textContent = todo.description;
@@ -426,6 +437,16 @@ function createTodo(project, todo) {
 
     todoElement.querySelector(".due-date span:last-child").textContent = time;
   }
+
+  const checkBoxBtn = todoElement.querySelector(".checkbox-container");
+  checkBoxBtn.addEventListener("click", () => {
+    todo.completed = true;
+    todoContainer.removeTodo(todoContainer.todos.indexOf(todo));
+    todoElement.classList.add("removed");
+  });
+  todoElement.addEventListener("transitionend", (e) => {
+    if (e.target === todoElement) todoElement.remove();
+  });
 }
 window.addEventListener("load", () => {
   sectionsList.insertAdjacentHTML("afterbegin", liHTML);
@@ -447,26 +468,7 @@ window.addEventListener("load", () => {
   });
 
   TodoList.projects[0].todos.forEach((todo) => {
-    createTodo(tasksList, todo);
-    // tasksList.insertAdjacentHTML("beforeend", todoHTML);
-    //
-    // const todoElement = tasksList.firstElementChild;
-    //
-    // todoElement.querySelector(".todo-title").textContent = todo.title;
-    // todoElement.querySelector(".todo-desc").textContent = todo.description;
-    //
-    // const date = new Intl.DateTimeFormat(navigator.language, {
-    //   year: "numeric",
-    //   month: "short",
-    //   day: "2-digit",
-    // }).format(todo.dueDate);
-    // todoElement.querySelector(".due-date span").textContent = date;
-    //
-    // const time = new Intl.DateTimeFormat(navigator.language, {
-    //   hour: "numeric",
-    //   minute: "numeric",
-    // }).format(todo.dueTime);
-    // todoElement.querySelector(".due-date span:last-child").textContent = time;
+    createTodo(tasksList, todo, TodoList.projects[0]);
   });
   addTodoBtn.dataset.project =
     TodoList.projects[0].name +
@@ -484,5 +486,7 @@ inlineForm.addEventListener("keydown", (e) => {
     }
     inlineForm.style.display = "none";
     inlineForm.remove();
+  } else if (e.key === "Enter") {
+    inlineForm.querySelector(".add-task-btn").click();
   }
 });
