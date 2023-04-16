@@ -172,22 +172,32 @@ document.querySelectorAll(".duedate-input").forEach((input) => {
   });
 });
 
-document
-  .querySelectorAll('.todo-input-text div[contenteditable="true"]')
-  .forEach((input) => {
-    input.addEventListener("input", (e) => {
-      const addTodo = input.closest("form").querySelector(".add-task-btn");
-      if (input.textContent === "") {
-        input.nextElementSibling.style.display = "block";
-        if (input.classList.contains("todo-title-input"))
-          addTodo.disabled = true;
-      } else {
-        input.nextElementSibling.style.display = "none";
-        if (input.classList.contains("todo-title-input"))
-          addTodo.disabled = false;
+const formTextInputs = document.querySelectorAll(
+  '.todo-input-text div[contenteditable="true"]'
+);
+formTextInputs.forEach((input) => {
+  input.addEventListener("input", (e) => {
+    const addTodo = input.closest("form").querySelector(".add-task-btn");
+    if (input.textContent === "") {
+      input.nextElementSibling.style.display = "block";
+      if (input.classList.contains("todo-title-input")) {
+        input
+          .closest(".todo-input-text")
+          .querySelector(".todo-desc-input ~ .placeholder").style.top = "27px";
+        addTodo.disabled = true;
       }
-    });
+    } else {
+      input.nextElementSibling.style.display = "none";
+      if (input.classList.contains("todo-title-input")) {
+        input
+          .closest(".todo-input-text")
+          .querySelector(".todo-desc-input ~ .placeholder").style.top =
+          5 + input.clientHeight + "px";
+        addTodo.disabled = false;
+      }
+    }
   });
+});
 
 document.querySelector(".clear-time-input").addEventListener("click", (e) => {
   e.preventDefault();
