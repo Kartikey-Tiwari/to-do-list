@@ -304,7 +304,12 @@
       </div>
     </form>
     <form class="add-section flex-row">
-      <input name="section-name" type="text" placeholder="Name this section" />
+      <input
+        name="section-name"
+        type="text"
+        placeholder="Name this section"
+        autocomplete="off"
+      />
       <div class="flex-row">
         <button class="add-section-confirm input-btn" disabled>
           Add section
@@ -312,6 +317,18 @@
         <button class="cancel-section input-btn">Cancel</button>
       </div>
     </form>
+    <div class="overlay">
+      <div class="delete-task-modal">
+        <div class="close-modal-container">
+          <button class="close-modal">X</button>
+        </div>
+        <div class="modal-body">Are you sure you want to delete this task?</div>
+        <div class="flex-row modal-footer">
+          <button class="input-btn cancel-delete-todo">Cancel</button>
+          <button class="input-btn delete-todo-btn">Delete</button>
+        </div>
+      </div>
+    </div>
     <footer></footer>
   </body>
 </html>
