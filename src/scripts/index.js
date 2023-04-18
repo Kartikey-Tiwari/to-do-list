@@ -52,6 +52,7 @@ document.querySelectorAll(".cancel-btn").forEach((btn) => {
 
     const time = btn.form.querySelector('input[type="time"]');
     time.value = "";
+    time.disabled = true;
     time.previousElementSibling.classList.remove("today");
     time.previousElementSibling.classList.remove("tomorrow");
     time.previousElementSibling.classList.remove("this-week");
@@ -80,7 +81,6 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
     const project = form.querySelector(".project-selector").value;
     if (!project) return;
 
-    console.log("project: ", project);
     const projectData = project.split("/");
     const projectName = projectData[0];
     const projectNum = +projectData[1];
@@ -358,7 +358,6 @@ function createSection(name, idx) {
 }
 
 function createTodo(project, todo, todoContainer) {
-  console.log(project, todo, todoContainer);
   const idx = todoContainer.addTodo(todo);
   const div = document.createElement("div");
   div.innerHTML = todoHTML;
@@ -373,17 +372,30 @@ function createTodo(project, todo, todoContainer) {
   todoElement.querySelector(".todo-title").textContent = todo.title;
   todoElement.querySelector(".todo-desc").textContent = todo.description;
 
+  const today = new Date();
+  const nextWeek = addDays(today, 7);
   if (todo.dueDate) {
-    const date = new Intl.DateTimeFormat(navigator.language, {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    }).format(todo.dueDate);
     todoElement.querySelector(".due-date").insertAdjacentHTML(
       "afterbegin",
       `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" class="calendar_icon" > <path fill-rule="evenodd" clip-rule="evenodd" d="M9.5 1h-7A1.5 1.5 0 001 2.5v7A1.5 1.5 0 002.5 11h7A1.5 1.5 0 0011 9.5v-7A1.5 1.5 0 009.5 1zM2 2.5a.5.5 0 01.5-.5h7a.5.5 0 01.5.5v7a.5.5 0 01-.5.5h-7a.5.5 0 01-.5-.5v-7zM8.75 8a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM3.5 4a.5.5 0 000 1h5a.5.5 0 000-1h-5z" fill="currentColor" ></path> </svg>
 `
     );
+    let date;
+    if (isToday(todo.dueDate)) {
+      date = "Today";
+      todoElement.querySelector(".due-date").classList.add("today");
+    } else if (isTomorrow(todo.dueDate)) {
+      date = "Tomorrow";
+      todoElement.querySelector(".due-date").classList.add("tomorrow");
+    } else if (
+      isWithinInterval(todo.dueDate, { start: today, end: nextWeek })
+    ) {
+      date = format(todo.dueDate, "EEEE");
+      todoElement.querySelector(".due-date").classList.add("this-week");
+    } else {
+      date = format(todo.dueDate, "dd MMM yyyy");
+    }
+
     todoElement.querySelector(".due-date span").textContent = date;
   }
 

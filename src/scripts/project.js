@@ -9,14 +9,14 @@ class TodoContainer {
     if (
       !todo.dueDate ||
       !array.length ||
-      !array[this.todos.length - 1] ||
-      array[array.length - 1].dueDate < todo.dueDate
+      (array[array.length - 1].dueDate &&
+        array[array.length - 1].dueDate < todo.dueDate)
     ) {
       array.push(todo);
       return array.length - 1;
     } else {
       for (let i = 0; i < array.length; i++) {
-        if (!array.dueDate || array[i].dueDate > todo.dueDate) {
+        if (!array[i].dueDate || array[i].dueDate > todo.dueDate) {
           array.splice(i, 0, todo);
           return i;
         }
