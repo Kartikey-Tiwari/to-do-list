@@ -28,13 +28,18 @@ class TodoContainer {
     return this.insertTodoSorted(this.todos, todo);
   }
 
-  removeTodo(index) {
+  completeTodo(index) {
     const [todo] = this.todos.splice(index, 1);
     this.insertTodoSorted(this.completedTodos, todo);
   }
 
-  deleteTodo(index) {
+  removeCompletedTodo(index) {
     this.completedTodos.splice(index, 1);
+  }
+
+  deleteTodo(todo) {
+    const index = this.todos.indexOf(todo);
+    if (index !== -1) this.todos.splice(index, 1);
   }
 
   get name() {

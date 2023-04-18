@@ -26,6 +26,10 @@ inlineForm.querySelector(".input-btn-row").addEventListener("click", (e) => {
   }
 });
 
+function removeDateTimeClasses(e) {
+  e.classList.remove("today", "tomorrow", "this-week");
+}
+
 document.querySelectorAll(".cancel-btn").forEach((btn) => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -45,17 +49,13 @@ document.querySelectorAll(".cancel-btn").forEach((btn) => {
 
     const date = btn.form.querySelector('input[type="date"]');
     date.value = "";
-    date.previousElementSibling.classList.remove("today");
-    date.previousElementSibling.classList.remove("tomorrow");
-    date.previousElementSibling.classList.remove("this-week");
+    removeDateTimeClasses(date.previousElementSibling);
     date.previousElementSibling.lastElementChild.textContent = "Date";
 
     const time = btn.form.querySelector('input[type="time"]');
     time.value = "";
     time.disabled = true;
-    time.previousElementSibling.classList.remove("today");
-    time.previousElementSibling.classList.remove("tomorrow");
-    time.previousElementSibling.classList.remove("this-week");
+    removeDateTimeClasses(time.previousElementSibling);
     time.previousElementSibling.lastElementChild.textContent = "Time";
     time.nextElementSibling.style.display = "none";
 
@@ -122,12 +122,8 @@ document.querySelectorAll(".duedate-input").forEach((input) => {
     new Date().toISOString().split("T")[0]
   );
   input.nextElementSibling.addEventListener("input", (e) => {
-    input.classList.remove("today");
-    input.classList.remove("tomorrow");
-    input.classList.remove("this-week");
-    input.nextElementSibling.nextElementSibling.classList.remove("today");
-    input.nextElementSibling.nextElementSibling.classList.remove("tomorrow");
-    input.nextElementSibling.nextElementSibling.classList.remove("this-week");
+    removeDateTimeClasses(input);
+    removeDateTimeClasses(input.nextElementSibling.nextElementSibling);
 
     if (input.nextElementSibling.value !== "") {
       const date = new Date(input.nextElementSibling.value);
@@ -235,9 +231,7 @@ document.querySelectorAll(".time-input").forEach((input) => {
     } else {
       input.nextElementSibling.nextElementSibling.style.display = "none";
       input.lastElementChild.textContent = "Time";
-      input.classList.remove("today");
-      input.classList.remove("tomorrow");
-      input.classList.remove("this-week");
+      removeDateTimeClasses(input);
     }
   });
 });
@@ -411,7 +405,8 @@ function createTodo(project, todo, todoContainer) {
   const checkBoxBtn = todoElement.querySelector(".checkbox-container");
   checkBoxBtn.addEventListener("click", () => {
     todo.completed = true;
-    todoContainer.removeTodo(todoContainer.todos.indexOf(todo));
+    todoContainer.completeTodo(todoContainer.todos.indexOf(todo));
+    console.log(todoContainer);
     todoElement.classList.add("removed");
   });
   todoElement.addEventListener("transitionend", (e) => {
@@ -435,7 +430,6 @@ inlineForm.addEventListener("keydown", (e) => {
 const sectionNameInput = addSectionForm.querySelector(
   'input[name="section-name"]'
 );
-const addSectionConfirm = addSectionForm.querySelector(".add-section-confirm");
 
 sectionNameInput.addEventListener("input", (e) => {
   if (sectionNameInput.value) {
@@ -445,6 +439,7 @@ sectionNameInput.addEventListener("input", (e) => {
   }
 });
 
+const addSectionConfirm = addSectionForm.querySelector(".add-section-confirm");
 addSectionConfirm.addEventListener("click", (e) => {
   e.preventDefault();
   const sectionName = sectionNameInput.value;
@@ -456,4 +451,19 @@ addSectionConfirm.addEventListener("click", (e) => {
   addSectionConfirm.form.remove();
   addSectionConfirm.disabled = true;
   addSectionConfirm.form.querySelector('input[name="section-name"]').value = "";
+});
+
+const cancelAddSection = addSectionForm.querySelector(".cancel-section");
+cancelAddSection.addEventListener("click", (e) => {
+  e.preventDefault();
+  cancelAddSection.previousElementSibling.disabled = true;
+  cancelAddSection.form.previousElementSibling.style.display = "";
+  cancelAddSection.form.style.display = "none";
+  cancelAddSection.form.firstElementChild.value = "";
+});
+
+cancelAddSection.form.firstElementChild.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    cancelAddSection.click();
+  }
 });
