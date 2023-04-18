@@ -388,6 +388,7 @@ input[type="time"] {
 
 .section {
   flex: 1;
+  margin-bottom: 20px;
 }
 
 .todo-options {
@@ -429,7 +430,6 @@ button.todo-more-options {
 
 .add-todo-btn {
   margin-top: 10px;
-  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -640,30 +640,36 @@ button.todo-more-options {
   cursor: default;
 }
 
-.cancel-btn {
+.cancel-btn,
+.cancel-section {
   background-color: rgb(245, 245, 245);
   color: rgb(68, 68, 68);
 }
 
-.cancel-btn:hover {
+.cancel-btn:hover,
+.cancel-section:hover {
   background-color: rgb(229, 229, 229);
   color: rgb(26, 26, 26);
 }
 
-.add-task-btn {
+.add-task-btn,
+.add-section-confirm {
   background-color: rgb(219, 76, 63);
   color: white;
 }
 
-.add-task-btn:disabled {
+.add-task-btn:disabled,
+.add-section-confirm:disabled {
   background-color: rgba(219, 76, 63, 0.4);
 }
 
-.add-task-btn:not(:disabled):hover {
+.add-task-btn:not(:disabled):hover,
+.add-section-confirm:not(:disabled):hover {
   background-color: #b03d32;
 }
 
-.add-task-btn.active:hover {
+.add-task-btn.active:hover,
+.add-section-confirm.active:hover {
   background-color: rgb(176, 61, 50);
 }
 
@@ -733,4 +739,15 @@ button.todo-more-options {
 
 .project-selector:hover {
   background-color: rgba(0, 0, 0, 0.2);
+}
+
+.add-section {
+  flex-direction: column;
+  display: none;
+  gap: 10px;
+}
+
+.add-section input {
+  padding: 5px;
+  font-size: 1rem;
 }

@@ -67,13 +67,15 @@ class Project extends TodoContainer {
     super(name);
     this._description = description;
     this._sections = [];
-    this.num = 0;
   }
 
-  addSection(name) {
+  addSection(name, index = this.sections.length) {
     const newSection = new TodoContainer(name);
-    newSection.num = this.num++;
-    this._sections.push(newSection);
+    newSection.num = index;
+    this._sections.splice(index, 0, newSection);
+    for (let i = index + 1; i < this._sections.length; i++) {
+      this._sections[i].num = i;
+    }
   }
 
   get description() {
