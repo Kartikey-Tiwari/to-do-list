@@ -8,6 +8,8 @@ import {
   isWithinInterval,
   addDays,
   isPast,
+  endOfDay,
+  startOfToday,
 } from "date-fns";
 
 let curProject = "Inbox";
@@ -54,7 +56,7 @@ document.querySelectorAll(".cancel-btn").forEach((btn) => {
 
     const time = btn.form.querySelector('input[type="time"]');
     time.value = "";
-    time.disabled = true;
+    time.previousElementSibling.disabled = true;
     removeDateTimeClasses(time.previousElementSibling);
     time.previousElementSibling.lastElementChild.textContent = "Time";
     time.nextElementSibling.style.display = "none";
@@ -100,16 +102,20 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
       dueDate: date ? new Date(date + " " + time) : null,
       dueTime: time ? true : false,
       priority: +priority,
-      project,
+      project: sectionName
+        ? TodoList.projects[projectNum].sections[sectionNum]
+        : TodoList.projects[projectNum],
       completed: false,
     });
 
     if (projectName === curProject && projectNum === curProjectIndex) {
       const i = sectionName ? sectionNum + 1 : 0;
+      const idx = todoContainer.addTodo(todo);
       createTodo(
         sectionsList.children[i].querySelector(".tasks-list"),
         todo,
-        todoContainer
+        todoContainer,
+        idx
       );
     }
     btn.form.querySelector(".cancel-btn").click();
@@ -291,13 +297,11 @@ const sectionsList = main.querySelector("ul#sections-list");
 const liHTML = `<li><section class="section"><header class="section-header"><div class="collapse-list"><svg width="24" height="24"><path fill="none" stroke=" currentColor" d="M16 10l-4 4-4-4"></path></svg></div><div class="section-info"><button class="section-name"><span></span></button><span></span></div><button class="todo-more-options"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ><gfill="none"stroke="currentColor" stroke-linecap="round" transform="translate(3 10)"><circle cx="2" cy="2" r="2"></circle><circle cx="9" cy="2" r="2"></circle><circle cx="16" cy="2" r="2"></circle></g></svg></button></header><ul class="tasks-list"></ul><li><button class="add-todo-btn"><span><svg width="13" height="13"><path d="M6 6V.5a.5.5 0 011 0V6h5.5a.5.5 0 110 1H7v5.5a.5.5 0 11-1 0V7H.5a.5.5 0 010-1H6z" fill="currentColor" fill-rule="evenodd"></path></svg></span><span>Add task</span></button></li></section><button class="add-section-btn">Add a section</button></li>`;
 const todoHTML = `<li class="todo"><button class="checkbox-container"><div class="checkbox"><svg width="24" height="24"><path fill="currentColor" d="M11.23 13.7l-2.15-2a.55.55 0 0 0-.74-.01l.03-.03a.46.46 0 0 0 0 .68L11.24 15l5.4-5.01a.45.45 0 0 0 0-.68l.02.03a.55.55 0 0 0-.73 0l-4.7 4.35z"></path></svg></div></button><div class="todo-info"><div class="todo-title-desc"><span class="todo-title"></span><span class="todo-desc"></span></div><div class="due-date"><span></span><span></span></div><div class="todo-options"><button class="edit-todo"><svg width="24" height="24" style=""><g fill="none" fill-rule="evenodd"><path fill="currentColor" d="M9.5 19h10a.5.5 0 110 1h-10a.5.5 0 110-1z"></path><path stroke="currentColor" d="M4.42 16.03a1.5 1.5 0 00-.43.9l-.22 2.02a.5.5 0 00.55.55l2.02-.21a1.5 1.5 0 00.9-.44L18.7 7.4a1.5 1.5 0 000-2.12l-.7-.7a1.5 1.5 0 00-2.13 0L4.42 16.02z"></path></g></svg></button><button class="delete"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><g fill="none" fill-rule="evenodd"><path d="M0 0h24v24H0z"></path><rect width="14" height="1" x="5" y="6" fill="currentColor" rx="0.5"></rect><path fill="currentColor" d="M10 9h1v8h-1V9zm3 0h1v8h-1V9z"></path><path stroke="currentColor" d="M17.5 6.5h-11V18A1.5 1.5 0 008 19.5h8a1.5 1.5 0 001.5-1.5V6.5zm-9 0h7V5A1.5 1.5 0 0014 3.5h-4A1.5 1.5 0 008.5 5v1.5z"></path></g></svg></button></div></div></li>`;
 
-function createSection(name, idx) {
+function createSectionDOM(name, idx, section) {
   const div = document.createElement("div");
   div.innerHTML = liHTML;
   const sectionLi = div.firstElementChild;
-  if (name) {
-    TodoList.projects[curProjectIndex].addSection(name, idx - 1);
-  }
+
   sectionsList.insertBefore(sectionLi, sectionsList.children[idx]);
 
   if (!name) sectionLi.querySelector(".section-header").innerHTML = "";
@@ -325,17 +329,10 @@ function createSection(name, idx) {
   });
   const tasksList = sectionLi.querySelector(".tasks-list");
 
-  if (!name) {
-    TodoList.projects[curProjectIndex].todos.forEach((todo, _, arr) => {
-      createTodo(tasksList, todo, arr);
-    });
-  } else {
-    TodoList.projects[curProjectIndex].sections[idx - 1].todos.forEach(
-      (todo, _, arr) => {
-        createTodo(tasksList, todo, arr);
-      }
-    );
-  }
+  section.todos.forEach((todo, idx) => {
+    createTodo(tasksList, todo, section, idx);
+  });
+
   addTodoBtn.dataset.project = `${curProject}/${curProjectIndex}/${name}/${
     name ? idx - 1 : ""
   }`;
@@ -351,8 +348,7 @@ function createSection(name, idx) {
   }
 }
 
-function createTodo(project, todo, todoContainer) {
-  const idx = todoContainer.addTodo(todo);
+function createTodo(project, todo, todoContainer, idx) {
   const div = document.createElement("div");
   div.innerHTML = todoHTML;
   project.insertBefore(div.firstElementChild, project.children[idx]);
@@ -368,6 +364,7 @@ function createTodo(project, todo, todoContainer) {
 
   const today = new Date();
   const nextWeek = addDays(today, 7);
+  const nextWeekEnd = endOfDay(nextWeek);
   if (todo.dueDate) {
     todoElement.querySelector(".due-date").insertAdjacentHTML(
       "afterbegin",
@@ -382,7 +379,7 @@ function createTodo(project, todo, todoContainer) {
       date = "Tomorrow";
       todoElement.querySelector(".due-date").classList.add("tomorrow");
     } else if (
-      isWithinInterval(todo.dueDate, { start: today, end: nextWeek })
+      isWithinInterval(todo.dueDate, { start: today, end: nextWeekEnd })
     ) {
       date = format(todo.dueDate, "EEEE");
       todoElement.querySelector(".due-date").classList.add("this-week");
@@ -405,7 +402,7 @@ function createTodo(project, todo, todoContainer) {
   const checkBoxBtn = todoElement.querySelector(".checkbox-container");
   checkBoxBtn.addEventListener("click", () => {
     todo.completed = true;
-    todoContainer.completeTodo(todoContainer.todos.indexOf(todo));
+    todo.project.completeTodo(todo.project.todos.indexOf(todo));
     console.log(todoContainer);
     todoElement.classList.add("removed");
   });
@@ -416,7 +413,7 @@ function createTodo(project, todo, todoContainer) {
 
 window.addEventListener("load", () => {
   populateProjectSelectorOptions();
-  createSection("", 0);
+  createSectionDOM("", 0, TodoList.projects[0]);
 });
 
 inlineForm.addEventListener("keydown", (e) => {
@@ -444,7 +441,11 @@ addSectionConfirm.addEventListener("click", (e) => {
   e.preventDefault();
   const sectionName = sectionNameInput.value;
   const idx = +addSectionConfirm.form.dataset.idx;
-  createSection(sectionName, idx);
+  const section = TodoList.projects[curProjectIndex].addSection(
+    sectionName,
+    idx - 1
+  );
+  createSectionDOM(sectionName, idx, section);
   populateProjectSelectorOptions();
   addSectionConfirm.form.previousElementSibling.style.display = "";
   addSectionConfirm.form.style.display = "none";
@@ -465,5 +466,46 @@ cancelAddSection.addEventListener("click", (e) => {
 cancelAddSection.form.firstElementChild.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     cancelAddSection.click();
+  }
+});
+
+const leftMenu = document.querySelector("#sidebar > ul:first-of-type");
+leftMenu.addEventListener("click", (e) => {
+  let clicked = e.target;
+  if (clicked) {
+    clicked = clicked.closest("li");
+  } else return;
+  if (clicked.id === "inbox") {
+    main.firstElementChild.firstElementChild.textContent =
+      TodoList.projects[0].name;
+    sectionsList.innerHTML = "";
+    curProjectIndex = 0;
+    curProject = "Inbox";
+    createSectionDOM("", 0, TodoList.projects[0]);
+    TodoList.projects[0].sections.forEach((section, idx) => {
+      createSectionDOM(section.name, idx + 1, section);
+    });
+  } else if (clicked.id === "today") {
+    main.firstElementChild.firstElementChild.textContent =
+      "Today " + format(startOfToday(), "EEE dd MMM");
+    sectionsList.innerHTML = "";
+    const Todocontainer = new TodoContainer("today");
+    TodoList.projects.forEach((project) => {
+      project.todos.forEach((todo) => {
+        if (isToday(todo.dueDate)) {
+          Todocontainer.addTodo(todo);
+        }
+      });
+
+      project.sections.forEach((section) => {
+        section.todos.forEach((todo) => {
+          if (isToday(todo.dueDate)) {
+            Todocontainer.addTodo(todo);
+          }
+        });
+      });
+    });
+    console.log(Todocontainer);
+    createSectionDOM("", 0, Todocontainer);
   }
 });

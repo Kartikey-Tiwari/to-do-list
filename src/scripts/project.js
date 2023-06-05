@@ -81,6 +81,7 @@ class Project extends TodoContainer {
     for (let i = index + 1; i < this._sections.length; i++) {
       this._sections[i].num = i;
     }
+    return newSection;
   }
 
   get description() {
