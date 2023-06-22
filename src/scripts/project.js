@@ -62,8 +62,16 @@ class TodoContainer {
     return this._todos;
   }
 
+  set todos(todos) {
+    this._todos = todos;
+  }
+
   get completedTodos() {
     return this._completedTodos;
+  }
+
+  set completedTodos(todos) {
+    this._completedTodos = todos;
   }
 }
 
@@ -111,6 +119,10 @@ class Project extends TodoContainer {
 
   get sections() {
     return this._sections;
+  }
+
+  set sections(sections) {
+    this._sections = sections;
   }
 }
 

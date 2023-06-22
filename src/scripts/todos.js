@@ -1,13 +1,13 @@
 export default class Todo {
-  constructor({
+  constructor(
     title = "",
     description = "",
     dueDate = null,
     dueTime = false,
     priority = 4,
-    project = "inbox",
-    completed = false,
-  }) {
+    project = "",
+    completed = false
+  ) {
     this._title = title;
     this._description = description;
     this._dueDate = dueDate;

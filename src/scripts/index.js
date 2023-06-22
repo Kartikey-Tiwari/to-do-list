@@ -12,6 +12,11 @@ import {
   startOfToday,
 } from "date-fns";
 
+import { Calendar } from "@fullcalendar/core";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
+
 let curProject = "Inbox";
 let curProjectIndex = 0;
 
@@ -28,9 +33,21 @@ inlineForm.querySelector(".input-btn-row").addEventListener("click", (e) => {
   }
 });
 
+function savedTodoLocalStorage() {
+  const jsonString = JSON.stringify(TodoList, (key, value) => {
+    if (key === "_project") {
+      return "";
+    }
+    return value;
+  });
+  localStorage.setItem("todoList", jsonString);
+}
+
 function removeDateTimeClasses(e) {
   e.classList.remove("today", "tomorrow", "this-week");
 }
+
+function addDateTimeClasses(e) {}
 
 document.querySelectorAll(".cancel-btn").forEach((btn) => {
   btn.addEventListener("click", (e) => {
@@ -96,21 +113,23 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
       todoContainer = TodoList.projects[projectNum].sections[sectionNum];
     }
 
-    const todo = new Todo({
+    const todo = new Todo(
       title,
-      description: desc,
-      dueDate: date ? new Date(date + " " + time) : null,
-      dueTime: time ? true : false,
-      priority: +priority,
-      project: sectionName
+      desc,
+      date ? new Date(date + " " + time) : null,
+      time ? true : false,
+      +priority,
+      sectionName
         ? TodoList.projects[projectNum].sections[sectionNum]
         : TodoList.projects[projectNum],
-      completed: false,
-    });
+      false
+    );
 
     if (projectName === curProject && projectNum === curProjectIndex) {
       const i = sectionName ? sectionNum + 1 : 0;
       const idx = todoContainer.addTodo(todo);
+
+      savedTodoLocalStorage();
       createTodo(
         sectionsList.children[i].querySelector(".tasks-list"),
         todo,
@@ -118,6 +137,30 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
         idx
       );
     }
+
+    const p = +priority;
+    if (date)
+      calendar.addEvent({
+        title,
+        start: date + " " + time,
+        end: date + " " + time,
+        borderColor:
+          p === 1
+            ? "rgb(209, 69, 59)"
+            : p === 2
+            ? "rgb(235, 137, 9)"
+            : p === 3
+            ? "rgb(36, 111, 224)"
+            : "rgb(0,0,0)",
+        backgroundColor:
+          p === 1
+            ? "rgba(209, 69, 59, 0.1)"
+            : p === 2
+            ? "rgba(235, 137, 9, 0.1)"
+            : p === 3
+            ? "rgba(36, 111, 224, 0.1)"
+            : "rgb(255,255,255)",
+      });
     btn.form.querySelector(".cancel-btn").click();
   });
 });
@@ -244,10 +287,13 @@ document.querySelectorAll(".time-input").forEach((input) => {
 const saved = localStorage.getItem("todoList");
 
 if (saved) {
-  TodoList.projects = JSON.parse(saved);
-  TodoList.projects = TodoList.projects.map((project) => {
+  const savedTodoList = JSON.parse(saved);
+
+  TodoList.numProjects = savedTodoList.numProjects;
+  TodoList.projects = savedTodoList.projects.map((project) => {
     return Object.assign(new Project(), project);
   });
+
   TodoList.projects.forEach((project) => {
     project.sections = project.sections.map((section) => {
       return Object.assign(new TodoContainer(), section);
@@ -255,14 +301,25 @@ if (saved) {
 
     project.sections.forEach((section) => {
       section.todos = section.todos.map((todo) => {
-        return Object.assign(new Todo(), todo);
+        todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
+        todo._project = section;
+        const newTodo = Object.assign(new Todo(), todo);
+        return newTodo;
       });
+
       section.completedTodos = section.completedTodos.map((todo) => {
-        return Object.assign(new Todo(), todo);
+        todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
+        todo._project = section;
+        const newTodo = Object.assign(new Todo(), todo);
+        return newTodo;
       });
     });
+
     project.todos = project.todos.map((todo) => {
-      return Object.assign(new Todo(), todo);
+      todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
+      todo._project = project;
+      const newTodo = Object.assign(new Todo(), todo);
+      return newTodo;
     });
   });
 }
@@ -296,6 +353,20 @@ const main = document.querySelector("main");
 const sectionsList = main.querySelector("ul#sections-list");
 const liHTML = `<li><section class="section"><header class="section-header"><div class="collapse-list"><svg width="24" height="24"><path fill="none" stroke=" currentColor" d="M16 10l-4 4-4-4"></path></svg></div><div class="section-info"><button class="section-name"><span></span></button><span></span></div><button class="todo-more-options"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ><gfill="none"stroke="currentColor" stroke-linecap="round" transform="translate(3 10)"><circle cx="2" cy="2" r="2"></circle><circle cx="9" cy="2" r="2"></circle><circle cx="16" cy="2" r="2"></circle></g></svg></button></header><ul class="tasks-list"></ul><li><button class="add-todo-btn"><span><svg width="13" height="13"><path d="M6 6V.5a.5.5 0 011 0V6h5.5a.5.5 0 110 1H7v5.5a.5.5 0 11-1 0V7H.5a.5.5 0 010-1H6z" fill="currentColor" fill-rule="evenodd"></path></svg></span><span>Add task</span></button></li></section><button class="add-section-btn">Add a section</button></li>`;
 const todoHTML = `<li class="todo"><button class="checkbox-container"><div class="checkbox"><svg width="24" height="24"><path fill="currentColor" d="M11.23 13.7l-2.15-2a.55.55 0 0 0-.74-.01l.03-.03a.46.46 0 0 0 0 .68L11.24 15l5.4-5.01a.45.45 0 0 0 0-.68l.02.03a.55.55 0 0 0-.73 0l-4.7 4.35z"></path></svg></div></button><div class="todo-info"><div class="todo-title-desc"><span class="todo-title"></span><span class="todo-desc"></span></div><div class="due-date"><span></span><span></span></div><div class="todo-options"><button class="edit-todo"><svg width="24" height="24" style=""><g fill="none" fill-rule="evenodd"><path fill="currentColor" d="M9.5 19h10a.5.5 0 110 1h-10a.5.5 0 110-1z"></path><path stroke="currentColor" d="M4.42 16.03a1.5 1.5 0 00-.43.9l-.22 2.02a.5.5 0 00.55.55l2.02-.21a1.5 1.5 0 00.9-.44L18.7 7.4a1.5 1.5 0 000-2.12l-.7-.7a1.5 1.5 0 00-2.13 0L4.42 16.02z"></path></g></svg></button><button class="delete"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><g fill="none" fill-rule="evenodd"><path d="M0 0h24v24H0z"></path><rect width="14" height="1" x="5" y="6" fill="currentColor" rx="0.5"></rect><path fill="currentColor" d="M10 9h1v8h-1V9zm3 0h1v8h-1V9z"></path><path stroke="currentColor" d="M17.5 6.5h-11V18A1.5 1.5 0 008 19.5h8a1.5 1.5 0 001.5-1.5V6.5zm-9 0h7V5A1.5 1.5 0 0014 3.5h-4A1.5 1.5 0 008.5 5v1.5z"></path></g></svg></button></div></div></li>`;
+
+const calendarEl = main.querySelector("#calendar");
+
+let calendar = new Calendar(calendarEl, {
+  plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
+  initialView: "dayGridMonth",
+  headerToolbar: {
+    left: "prev,next today",
+    center: "title",
+    right: "dayGridMonth,dayGridWeek,listWeek",
+  },
+});
+calendar.render();
+calendarEl.style.display = "none";
 
 function createSectionDOM(name, idx, section) {
   const div = document.createElement("div");
@@ -403,7 +474,6 @@ function createTodo(project, todo, todoContainer, idx) {
   checkBoxBtn.addEventListener("click", () => {
     todo.completed = true;
     todo.project.completeTodo(todo.project.todos.indexOf(todo));
-    console.log(todoContainer);
     todoElement.classList.add("removed");
   });
   todoElement.addEventListener("transitionend", (e) => {
@@ -414,6 +484,9 @@ function createTodo(project, todo, todoContainer, idx) {
 window.addEventListener("load", () => {
   populateProjectSelectorOptions();
   createSectionDOM("", 0, TodoList.projects[0]);
+  TodoList.projects[0].sections.forEach((section, idx) => {
+    createSectionDOM(section.name, idx + 1, section);
+  });
 });
 
 inlineForm.addEventListener("keydown", (e) => {
@@ -445,6 +518,7 @@ addSectionConfirm.addEventListener("click", (e) => {
     sectionName,
     idx - 1
   );
+  savedTodoLocalStorage();
   createSectionDOM(sectionName, idx, section);
   populateProjectSelectorOptions();
   addSectionConfirm.form.previousElementSibling.style.display = "";
@@ -476,6 +550,7 @@ leftMenu.addEventListener("click", (e) => {
     clicked = clicked.closest("li");
   } else return;
   if (clicked.id === "inbox") {
+    calendarEl.style.display = "none";
     main.firstElementChild.firstElementChild.textContent =
       TodoList.projects[0].name;
     sectionsList.innerHTML = "";
@@ -486,6 +561,7 @@ leftMenu.addEventListener("click", (e) => {
       createSectionDOM(section.name, idx + 1, section);
     });
   } else if (clicked.id === "today") {
+    calendarEl.style.display = "none";
     main.firstElementChild.firstElementChild.textContent =
       "Today " + format(startOfToday(), "EEE dd MMM");
     sectionsList.innerHTML = "";
@@ -505,7 +581,12 @@ leftMenu.addEventListener("click", (e) => {
         });
       });
     });
-    console.log(Todocontainer);
+
     createSectionDOM("", 0, Todocontainer);
+    // inlineForm.querySelector("");
+  } else if (clicked.id === "upcoming") {
+    main.firstElementChild.firstElementChild.textContent = "";
+    calendarEl.style.display = "block";
+    calendar.render();
   }
 });
