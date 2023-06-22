@@ -47,8 +47,6 @@ function removeDateTimeClasses(e) {
   e.classList.remove("today", "tomorrow", "this-week");
 }
 
-function addDateTimeClasses(e) {}
-
 document.querySelectorAll(".cancel-btn").forEach((btn) => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -101,16 +99,14 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
     if (!project) return;
 
     const projectData = project.split("/");
-    const projectName = projectData[0];
-    const projectNum = +projectData[1];
-    const sectionName = projectData[2];
-    const sectionNum = +projectData[3];
+    const projectIdx = projectData[0];
+    const sectionIdx = projectData[1];
 
     let todoContainer;
-    if (sectionName === "") {
-      todoContainer = TodoList.projects[projectNum];
+    if (sectionIdx === "") {
+      todoContainer = TodoList.projects[+projectIdx];
     } else {
-      todoContainer = TodoList.projects[projectNum].sections[sectionNum];
+      todoContainer = TodoList.projects[+projectIdx].sections[+sectionIdx];
     }
 
     const todo = new Todo(
@@ -119,21 +115,20 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
       date ? new Date(date + " " + time) : null,
       time ? true : false,
       +priority,
-      sectionName
-        ? TodoList.projects[projectNum].sections[sectionNum]
-        : TodoList.projects[projectNum],
+      sectionIdx
+        ? TodoList.projects[+projectIdx].sections[+sectionIdx]
+        : TodoList.projects[+projectIdx],
       false
     );
 
-    if (projectName === curProject && projectNum === curProjectIndex) {
-      const i = sectionName ? sectionNum + 1 : 0;
-      const idx = todoContainer.addTodo(todo);
+    const idx = todoContainer.addTodo(todo);
+    savedTodoLocalStorage();
 
-      savedTodoLocalStorage();
+    if (+projectIdx === curProjectIndex) {
+      const i = sectionIdx ? +sectionIdx + 1 : 0;
       createTodo(
         sectionsList.children[i].querySelector(".tasks-list"),
         todo,
-        todoContainer,
         idx
       );
     }
@@ -329,19 +324,16 @@ function populateProjectSelectorOptions() {
   projectSelector.forEach((selector) => {
     selector.innerHTML = "";
   });
-  TodoList.projects.forEach((project) => {
+  TodoList.projects.forEach((project, projectIdx) => {
     const option = document.createElement("option");
-    option.value =
-      project.name + "/" + (project.num ? `(${project.num})` : "0") + "//";
+    option.value = projectIdx + "/";
     option.textContent = project.name;
     projectSelector.forEach((selector) => {
       selector.appendChild(option.cloneNode(true));
     });
-    project.sections.forEach((section) => {
+    project.sections.forEach((section, sectionIdx) => {
       const option = document.createElement("option");
-      option.value = `${project.name}/${project.num ? project.num : "0"}/${
-        section.name
-      }/${section.num}`;
+      option.value = `${projectIdx}/${sectionIdx}`;
       option.textContent = `${project.name} > ${section.name}`;
       projectSelector.forEach((selector) => {
         selector.appendChild(option.cloneNode(true));
@@ -385,15 +377,31 @@ function createSectionDOM(name, idx, section) {
     addSectionForm.style.display = "flex";
     addSectionForm.dataset.idx = addSectionBtn.dataset.idx;
     addSectionBtn.style.display = "none";
+    addSectionForm.querySelector("input").focus();
   });
 
   const addTodoBtn = sectionLi.querySelector(".add-todo-btn");
   addTodoBtn.addEventListener("click", () => {
     addTodoBtn.closest("li").appendChild(inlineForm);
-    inlineForm.style.display = "block";
-    inlineForm.querySelector(".todo-title-input").focus();
+    const dateInputBtn = inlineForm.querySelector(".duedate-input");
     inlineForm.querySelector(".project-selector").value =
       addTodoBtn.dataset.project;
+    if (curProject === "Today") {
+      dateInputBtn.lastElementChild.textContent = "Today";
+      dateInputBtn.classList.add("today");
+      dateInputBtn.nextElementSibling.value = new Date()
+        .toISOString()
+        .slice(0, 10);
+      dateInputBtn.nextElementSibling.nextElementSibling.disabled = false;
+      inlineForm.querySelector(".project-selector").value = "0/";
+    } else {
+      dateInputBtn.lastElementChild.textContent = "Date";
+      dateInputBtn.classList.remove("today");
+      dateInputBtn.nextElementSibling.value = "";
+      dateInputBtn.nextElementSibling.nextElementSibling.disabled = true;
+    }
+    inlineForm.style.display = "block";
+    inlineForm.querySelector(".todo-title-input").focus();
     main.querySelectorAll(".add-todo-btn").forEach((btn) => {
       btn.style.display = "none";
     });
@@ -401,12 +409,10 @@ function createSectionDOM(name, idx, section) {
   const tasksList = sectionLi.querySelector(".tasks-list");
 
   section.todos.forEach((todo, idx) => {
-    createTodo(tasksList, todo, section, idx);
+    createTodo(tasksList, todo, idx);
   });
 
-  addTodoBtn.dataset.project = `${curProject}/${curProjectIndex}/${name}/${
-    name ? idx - 1 : ""
-  }`;
+  addTodoBtn.dataset.project = `${curProjectIndex}/${name ? idx - 1 : ""}`;
 
   for (let i = idx + 1; i < sectionsList.children.length; i++) {
     const addSectionBtn1 =
@@ -419,12 +425,15 @@ function createSectionDOM(name, idx, section) {
   }
 }
 
-function createTodo(project, todo, todoContainer, idx) {
+function createTodo(projectElement, todo, idx) {
   const div = document.createElement("div");
   div.innerHTML = todoHTML;
-  project.insertBefore(div.firstElementChild, project.children[idx]);
+  projectElement.insertBefore(
+    div.firstElementChild,
+    projectElement.children[idx]
+  );
 
-  const todoElement = project.children[idx];
+  const todoElement = projectElement.children[idx];
   const checkBox = todoElement.querySelector(".checkbox");
   if (todo.priority < 4) {
     checkBox.classList.add(`checkbox-p${todo.priority}`);
@@ -561,6 +570,8 @@ leftMenu.addEventListener("click", (e) => {
       createSectionDOM(section.name, idx + 1, section);
     });
   } else if (clicked.id === "today") {
+    curProject = "Today";
+    curProjectIndex = -1;
     calendarEl.style.display = "none";
     main.firstElementChild.firstElementChild.textContent =
       "Today " + format(startOfToday(), "EEE dd MMM");
@@ -583,7 +594,6 @@ leftMenu.addEventListener("click", (e) => {
     });
 
     createSectionDOM("", 0, Todocontainer);
-    // inlineForm.querySelector("");
   } else if (clicked.id === "upcoming") {
     main.firstElementChild.firstElementChild.textContent = "";
     calendarEl.style.display = "block";
