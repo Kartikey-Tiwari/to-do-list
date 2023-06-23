@@ -131,6 +131,15 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
         todo,
         idx
       );
+    } else if (curProjectIndex === -1) {
+      if (todo.dueDate && isToday(todo.dueDate)) {
+        const idx = todayTodos.addTodo(todo);
+        createTodo(
+          sectionsList.children[0].querySelector(".tasks-list"),
+          todo,
+          idx
+        );
+      }
     }
 
     const p = +priority;
@@ -279,6 +288,7 @@ document.querySelectorAll(".time-input").forEach((input) => {
     }
   });
 });
+const todayTodos = new TodoContainer("today");
 const saved = localStorage.getItem("todoList");
 
 if (saved) {
@@ -299,6 +309,7 @@ if (saved) {
         todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
         todo._project = section;
         const newTodo = Object.assign(new Todo(), todo);
+        if (isToday(newTodo.dueDate)) todayTodos.addTodo(newTodo);
         return newTodo;
       });
 
@@ -314,6 +325,7 @@ if (saved) {
       todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
       todo._project = project;
       const newTodo = Object.assign(new Todo(), todo);
+      if (isToday(newTodo.dueDate)) todayTodos.addTodo(newTodo);
       return newTodo;
     });
   });
@@ -570,30 +582,16 @@ leftMenu.addEventListener("click", (e) => {
       createSectionDOM(section.name, idx + 1, section);
     });
   } else if (clicked.id === "today") {
-    curProject = "Today";
-    curProjectIndex = -1;
-    calendarEl.style.display = "none";
-    main.firstElementChild.firstElementChild.textContent =
-      "Today " + format(startOfToday(), "EEE dd MMM");
-    sectionsList.innerHTML = "";
-    const Todocontainer = new TodoContainer("today");
-    TodoList.projects.forEach((project) => {
-      project.todos.forEach((todo) => {
-        if (isToday(todo.dueDate)) {
-          Todocontainer.addTodo(todo);
-        }
-      });
+    if (curProjectIndex !== -1) {
+      curProject = "Today";
+      curProjectIndex = -1;
+      calendarEl.style.display = "none";
+      main.firstElementChild.firstElementChild.textContent =
+        "Today " + format(startOfToday(), "EEE dd MMM");
+      sectionsList.innerHTML = "";
 
-      project.sections.forEach((section) => {
-        section.todos.forEach((todo) => {
-          if (isToday(todo.dueDate)) {
-            Todocontainer.addTodo(todo);
-          }
-        });
-      });
-    });
-
-    createSectionDOM("", 0, Todocontainer);
+      createSectionDOM("", 0, todayTodos);
+    }
   } else if (clicked.id === "upcoming") {
     main.firstElementChild.firstElementChild.textContent = "";
     calendarEl.style.display = "block";
