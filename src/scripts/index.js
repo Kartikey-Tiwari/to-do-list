@@ -290,6 +290,32 @@ document.querySelectorAll(".time-input").forEach((input) => {
 });
 const todayTodos = new Project("Today");
 const saved = localStorage.getItem("todoList");
+const projectHTML = `
+            <li>
+              <a href="#" class="li-a">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  class="project_icon"
+                  style="color: rgb(184, 184, 184)"
+                >
+                  <path
+                    d="M12 7a5 5 0 110 10 5 5 0 010-10z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <span class="project-name"></span>
+              </a>
+              <div class="project-todo-count">
+                <span>0</span>
+              </div>
+            </li>
+`;
+
+const addProjectBtn = document.querySelector(".add-project-btn");
+const addProjectForm = document.querySelector(".add-project-form");
+const projectContainer = document.querySelector("#projects-container ul");
 
 if (saved) {
   const savedTodoList = JSON.parse(saved);
@@ -299,6 +325,7 @@ if (saved) {
   });
 
   TodoList.projects.forEach((project) => {
+    createProjectDOM(project);
     project.sections = project.sections.map((section) => {
       return Object.assign(new TodoContainer(), section);
     });
@@ -581,31 +608,6 @@ leftMenu.addEventListener("click", (e) => {
   }
 });
 
-const projectHTML = `
-            <li>
-              <a href="#" class="li-a">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  class="project_icon"
-                  style="color: rgb(184, 184, 184)"
-                >
-                  <path
-                    d="M12 7a5 5 0 110 10 5 5 0 010-10z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <span class="project-name"></span>
-              </a>
-              <div class="project-todo-count">
-                <span>0</span>
-              </div>
-            </li>
-`;
-const addProjectBtn = document.querySelector(".add-project-btn");
-const addProjectForm = document.querySelector(".add-project-form");
-const projectContainer = document.querySelector("#projects-container ul");
 addProjectBtn.addEventListener("click", () => {
   addProjectForm.style.display = "flex";
   projectContainer.append(addProjectForm);

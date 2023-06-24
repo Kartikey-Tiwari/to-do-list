@@ -201,6 +201,10 @@ ul li {
   overflow: auto;
 }
 
+#projects-container ul {
+  height: calc(100% - 34px);
+}
+
 #projects-container button {
   height: 26px;
   color: rgb(102, 102, 102);
