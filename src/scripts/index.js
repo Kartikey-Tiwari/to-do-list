@@ -288,13 +288,12 @@ document.querySelectorAll(".time-input").forEach((input) => {
     }
   });
 });
-const todayTodos = new TodoContainer("today");
+const todayTodos = new Project("Today");
 const saved = localStorage.getItem("todoList");
 
 if (saved) {
   const savedTodoList = JSON.parse(saved);
 
-  TodoList.numProjects = savedTodoList.numProjects;
   TodoList.projects = savedTodoList.projects.map((project) => {
     return Object.assign(new Project(), project);
   });
@@ -504,10 +503,7 @@ function createTodo(projectElement, todo, idx) {
 
 window.addEventListener("load", () => {
   populateProjectSelectorOptions();
-  createSectionDOM("", 0, TodoList.projects[0]);
-  TodoList.projects[0].sections.forEach((section, idx) => {
-    createSectionDOM(section.name, idx + 1, section);
-  });
+  renderProject(TodoList.projects[0]);
 });
 
 inlineForm.addEventListener("keydown", (e) => {
@@ -571,30 +567,111 @@ leftMenu.addEventListener("click", (e) => {
     clicked = clicked.closest("li");
   } else return;
   if (clicked.id === "inbox") {
-    calendarEl.style.display = "none";
-    main.firstElementChild.firstElementChild.textContent =
-      TodoList.projects[0].name;
-    sectionsList.innerHTML = "";
-    curProjectIndex = 0;
-    curProject = "Inbox";
-    createSectionDOM("", 0, TodoList.projects[0]);
-    TodoList.projects[0].sections.forEach((section, idx) => {
-      createSectionDOM(section.name, idx + 1, section);
-    });
+    renderProject(TodoList.projects[0]);
   } else if (clicked.id === "today") {
     if (curProjectIndex !== -1) {
-      curProject = "Today";
-      curProjectIndex = -1;
-      calendarEl.style.display = "none";
+      renderProject(todayTodos);
       main.firstElementChild.firstElementChild.textContent =
         "Today " + format(startOfToday(), "EEE dd MMM");
-      sectionsList.innerHTML = "";
-
-      createSectionDOM("", 0, todayTodos);
     }
   } else if (clicked.id === "upcoming") {
     main.firstElementChild.firstElementChild.textContent = "";
     calendarEl.style.display = "block";
     calendar.render();
+  }
+});
+
+const projectHTML = `
+            <li>
+              <a href="#" class="li-a">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  class="project_icon"
+                  style="color: rgb(184, 184, 184)"
+                >
+                  <path
+                    d="M12 7a5 5 0 110 10 5 5 0 010-10z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <span class="project-name"></span>
+              </a>
+              <div class="project-todo-count">
+                <span>0</span>
+              </div>
+            </li>
+`;
+const addProjectBtn = document.querySelector(".add-project-btn");
+const addProjectForm = document.querySelector(".add-project-form");
+const projectContainer = document.querySelector("#projects-container ul");
+addProjectBtn.addEventListener("click", () => {
+  addProjectForm.style.display = "flex";
+  projectContainer.append(addProjectForm);
+  addProjectForm.querySelector("input").focus();
+});
+
+const projectNameInput = addProjectForm.querySelector("input");
+const addProjectConfirm = addProjectForm.querySelector(".add-project-confirm");
+
+projectNameInput.addEventListener("input", (e) => {
+  if (projectNameInput.value) {
+    addProjectConfirm.disabled = false;
+  } else {
+    addProjectConfirm.disabled = true;
+  }
+});
+
+function renderProject(project) {
+  calendarEl.style.display = "none";
+  main.firstElementChild.firstElementChild.textContent = project.name;
+  sectionsList.innerHTML = "";
+  curProjectIndex = TodoList.projects.indexOf(project);
+  curProject = project.name;
+  createSectionDOM("", 0, project);
+  project.sections.forEach((section, idx) => {
+    createSectionDOM(section.name, idx + 1, section);
+  });
+}
+
+function createProjectDOM(project) {
+  const div = document.createElement("div");
+  div.insertAdjacentHTML("afterbegin", projectHTML);
+  const projectEl = div.firstElementChild;
+  projectEl.querySelector(".project-name").textContent = project.name;
+  projectContainer.append(projectEl);
+  projectEl.addEventListener("click", () => {
+    renderProject(project);
+  });
+}
+
+addProjectConfirm.addEventListener("click", (e) => {
+  e.preventDefault();
+  const projectName = projectNameInput.value;
+  if (!projectName) return;
+  const project = new Project(projectName);
+  TodoList.addProject(project);
+
+  savedTodoLocalStorage();
+  createProjectDOM(project);
+  populateProjectSelectorOptions();
+  addProjectConfirm.form.style.display = "none";
+  addProjectConfirm.form.remove();
+  addProjectConfirm.disabled = true;
+  projectNameInput.value = "";
+});
+
+const cancelAddProject = addProjectForm.querySelector(".add-project-cancel");
+cancelAddProject.addEventListener("click", (e) => {
+  e.preventDefault();
+  cancelAddProject.previousElementSibling.disabled = true;
+  cancelAddProject.form.style.display = "none";
+  projectNameInput.value = "";
+});
+
+projectNameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    cancelAddProject.click();
   }
 });

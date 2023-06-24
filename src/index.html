@@ -67,7 +67,7 @@
               </svg>
               <span>Inbox</span>
             </a>
-            <div class="li-div">
+            <div class="inbox-count project-todo-count">
               <span>6</span>
             </div>
           </li>
@@ -102,7 +102,7 @@
               </svg>
               <span>Today</span>
             </a>
-            <div class="li-div">
+            <div class="project-todo-count">
               <span>6</span>
             </div>
           </li>
@@ -160,9 +160,14 @@
         <div id="projects-container">
           <div id="projects-heading-container">
             <span id="projects-heading">Projects</span>
-            <button>
-              <i class="fa-solid fa-caret-down"></i>
-            </button>
+            <div class="flex-row">
+              <button class="add-project-btn">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+              <button>
+                <i class="fa-solid fa-caret-down"></i>
+              </button>
+            </div>
           </div>
           <ul>
             <li>
@@ -179,13 +184,20 @@
                     fill="currentColor"
                   ></path>
                 </svg>
-                <span>Welcome 👋</span>
+                <span class="project-name">Welcome 👋</span>
               </a>
-              <div class="li-div">
+              <div class="project-todo-count">
                 <span>10</span>
               </div>
             </li>
           </ul>
+          <form class="add-project-form">
+            <input type="text" />
+            <div class="project-form-btns">
+              <button class="add-project-confirm">Add</button>
+              <button class="add-project-cancel">Cancel</button>
+            </div>
+          </form>
         </div>
       </nav>
       <main>
