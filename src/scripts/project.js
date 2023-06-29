@@ -33,8 +33,9 @@ class TodoContainer {
     this.insertTodoSorted(this.completedTodos, todo);
   }
 
-  removeCompletedTodo(index) {
-    this.completedTodos.splice(index, 1);
+  removeCompletedTodo(todo) {
+    const index = this.completedTodos.indexOf(todo);
+    if (index !== -1) this.completedTodos.splice(index, 1);
   }
 
   deleteTodo(todo) {

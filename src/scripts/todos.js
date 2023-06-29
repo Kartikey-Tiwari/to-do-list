@@ -40,7 +40,7 @@ export default class Todo {
   }
 
   set dueDate(newDueDate) {
-    if (newDueDate instanceof Date) this._dueDate = newDueDate;
+    this._dueDate = newDueDate;
   }
 
   get dueTime() {
@@ -48,7 +48,7 @@ export default class Todo {
   }
 
   set dueTime(newDueTime) {
-    if (newDueTime instanceof Date && this._dueDate) this._dueTime = newDueTime;
+    this._dueTime = newDueTime;
   }
 
   get priority() {
@@ -66,9 +66,7 @@ export default class Todo {
   }
 
   set project(newProject) {
-    if (newProject.length > 0) {
-      this._project = newProject;
-    }
+    this._project = newProject;
   }
 
   get completed() {

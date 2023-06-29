@@ -169,28 +169,7 @@
               </button>
             </div>
           </div>
-          <ul>
-            <li>
-              <a href="#" class="li-a">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  class="project_icon"
-                  style="color: rgb(184, 184, 184)"
-                >
-                  <path
-                    d="M12 7a5 5 0 110 10 5 5 0 010-10z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <span class="project-name">Welcome 👋</span>
-              </a>
-              <div class="project-todo-count">
-                <span>10</span>
-              </div>
-            </li>
-          </ul>
+          <ul></ul>
           <form class="add-project-form">
             <input type="text" />
             <div class="project-form-btns">
@@ -267,12 +246,12 @@
           </select>
           <div>
             <button class="cancel-btn input-btn">Cancel</button>
-            <button class="add-task-btn input-btn">Add Task</button>
+            <button class="add-task-btn input-btn confirm-btn">Add Task</button>
           </div>
         </div>
       </form>
     </div>
-    <form class="inline-form form">
+    <form class="inline-form main-form form">
       <div class="todo-input-text">
         <div contenteditable="true" class="todo-title-input"></div>
         <div class="placeholder">Task Name</div>
@@ -312,7 +291,55 @@
         <select name="project" class="project-selector"></select>
         <div>
           <button class="cancel-btn input-btn">Cancel</button>
-          <button disabled class="add-task-btn input-btn">Add Task</button>
+          <button disabled class="add-task-btn input-btn confirm-btn">
+            Add Task
+          </button>
+        </div>
+      </div>
+    </form>
+    <form class="update-todo-form main-form form">
+      <div class="todo-input-text">
+        <div contenteditable="true" class="todo-title-input"></div>
+        <div class="placeholder">Task Name</div>
+        <div class="todo-desc-input" contenteditable="true"></div>
+        <div class="placeholder">Description</div>
+      </div>
+      <div class="input-btn-row flex-row">
+        <button class="duedate-input todo-input-btn">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            class="no_due_date"
+          >
+            <path
+              fill="currentColor"
+              d="M12 2a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2h8zm0 1H4a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V4a1 1 0 00-1-1zm-1.25 7a.75.75 0 110 1.5.75.75 0 010-1.5zm.75-5a.5.5 0 110 1h-7a.5.5 0 010-1h7z"
+            ></path>
+          </svg>
+          <span>Date</span>
+        </button>
+        <input name="date" type="date" />
+        <button disabled class="time-input todo-input-btn">
+          <span>Time</span>
+        </button>
+        <input name="time" type="time" />
+        <span class="clear-time-input" title="Clear due time">x</span>
+        <select name="priority" class="todo-input-btn">
+          <option value="1">Priority 1</option>
+          <option value="2">Priority 2</option>
+          <option value="3">Priority 3</option>
+          <option selected value="4">Priority 4</option>
+        </select>
+      </div>
+      <div class="input-row flex-row">
+        <select name="project" class="project-selector"></select>
+        <div>
+          <button class="cancel-btn input-btn">Cancel</button>
+          <button class="update-task-btn input-btn confirm-btn">
+            Update Task
+          </button>
         </div>
       </div>
     </form>

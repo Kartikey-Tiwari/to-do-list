@@ -573,8 +573,8 @@ button.todo-more-options {
   top: 27px;
 }
 
-.inline-form .todo-title-input,
-.inline-form .todo-title-input ~ .placeholder {
+.main-form .todo-title-input,
+.main-form .todo-title-input ~ .placeholder {
   font-size: 16px;
   line-height: 22px;
 }
@@ -590,8 +590,8 @@ button.todo-more-options {
   line-height: 22px;
 }
 
-.inline-form .todo-desc-input,
-.inline-form .todo-desc-input ~ .placeholder {
+.main-form .todo-desc-input,
+.main-form .todo-desc-input ~ .placeholder {
   font-size: 12px;
   line-height: 18px;
 }
@@ -641,6 +641,7 @@ button.todo-more-options {
 }
 
 .cancel-btn,
+.cancel-update-btn,
 .cancel-section,
 .cancel-delete-todo,
 .add-project-cancel {
@@ -649,6 +650,7 @@ button.todo-more-options {
 }
 
 .cancel-btn:hover,
+.cancel-update-btn:hover,
 .cancel-section:hover,
 .cancel-delete-todo:hover,
 .add-project-cancel:hover {
@@ -657,6 +659,7 @@ button.todo-more-options {
 }
 
 .add-task-btn,
+.update-task-btn,
 .add-section-confirm,
 .delete-todo-btn,
 .add-project-confirm {
@@ -665,12 +668,14 @@ button.todo-more-options {
 }
 
 .add-task-btn:disabled,
+.update-task-btn:disabled,
 .add-section-confirm:disabled,
 .add-project-confirm:disabled {
   background-color: rgba(219, 76, 63, 0.4);
 }
 
 .add-task-btn:not(:disabled):hover,
+.update-task-btn:not(:disabled):hover,
 .add-section-confirm:not(:disabled):hover,
 .delete-todo-btn:not(:disabled):hover,
 .add-project-confirm:not(:disabled):hover {
@@ -678,6 +683,7 @@ button.todo-more-options {
 }
 
 .add-task-btn.active:hover,
+.update-task-btn.active:hover,
 .add-section-confirm.active:hover,
 .delete-todo-btn.active:hover {
   background-color: rgb(176, 61, 50);
@@ -711,12 +717,12 @@ button.todo-more-options {
   border-radius: 5px;
 }
 
-.inline-form {
+.main-form {
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.inline-form:focus-within {
+.main-form:focus-within {
   border: 1px solid rgba(0, 0, 0, 0.4);
 }
 
@@ -833,4 +839,8 @@ button.todo-more-options {
 
 .add-project-cancel {
   color: black !important;
+}
+
+.todo-options button:active svg {
+  transform: scale(0.8);
 }
