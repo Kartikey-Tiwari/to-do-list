@@ -425,6 +425,14 @@ let calendar = new Calendar(calendarEl, {
 calendar.render();
 calendarEl.style.display = "none";
 
+const addSectionConfirm = addSectionForm.querySelector(".add-section-confirm");
+const cancelAddSection = addSectionForm.querySelector(".cancel-section");
+cancelAddSection.form.firstElementChild.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    cancelAddSection.click();
+  }
+});
+
 function createSectionDOM(name, idx, section) {
   const div = document.createElement("div");
   div.innerHTML = liHTML;
@@ -436,11 +444,40 @@ function createSectionDOM(name, idx, section) {
   else sectionLi.querySelector(".section-name").textContent = name;
 
   const addSectionBtn = sectionLi.querySelector(".add-section-btn");
-  addSectionBtn.dataset.idx = `${idx + 1}`;
+
+  function addSectionConfirmBinding(e) {
+    e.preventDefault();
+    const sectionName = sectionNameInput.value;
+
+    let idx = TodoList.projects[curProjectIndex].sections.indexOf(section) + 1;
+    const newSection = TodoList.projects[curProjectIndex].addSection(
+      sectionName,
+      idx
+    );
+    savedTodoLocalStorage();
+    createSectionDOM(sectionName, idx + 1, newSection);
+    populateProjectSelectorOptions();
+    cancelAddSection.click();
+  }
+
+  function resetFormAndListeners(e) {
+    e.preventDefault();
+    addSectionConfirm.disabled = true;
+    addSectionForm.previousElementSibling.style.display = "";
+    addSectionForm.style.display = "none";
+    addSectionForm.remove();
+    cancelAddSection.form.firstElementChild.value = "";
+    addSectionConfirm.removeEventListener("click", addSectionConfirmBinding);
+    cancelAddSection.removeEventListener("click", resetFormAndListeners);
+  }
+
   addSectionBtn.addEventListener("click", () => {
     sectionLi.appendChild(addSectionForm);
     addSectionForm.style.display = "flex";
-    addSectionForm.dataset.idx = addSectionBtn.dataset.idx;
+
+    addSectionConfirm.addEventListener("click", addSectionConfirmBinding);
+    cancelAddSection.addEventListener("click", resetFormAndListeners);
+
     addSectionBtn.style.display = "none";
     addSectionForm.querySelector("input").focus();
   });
@@ -449,8 +486,14 @@ function createSectionDOM(name, idx, section) {
   addTodoBtn.addEventListener("click", () => {
     addTodoBtn.closest("li").appendChild(inlineForm);
     const dateInputBtn = inlineForm.querySelector(".duedate-input");
-    inlineForm.querySelector(".project-selector").value =
-      addTodoBtn.dataset.project;
+
+    let sectionIdx =
+      TodoList.projects[curProjectIndex].sections.indexOf(section);
+    if (sectionIdx === -1) sectionIdx = "";
+
+    inlineForm.querySelector(
+      ".project-selector"
+    ).value = `${curProjectIndex}/${sectionIdx}`;
     if (curProject === "Today") {
       dateInputBtn.lastElementChild.textContent = "Today";
       dateInputBtn.classList.add("today");
@@ -477,17 +520,7 @@ function createSectionDOM(name, idx, section) {
     createTodo(tasksList, todo, idx);
   });
 
-  addTodoBtn.dataset.project = `${curProjectIndex}/${name ? idx - 1 : ""}`;
-
-  for (let i = idx + 1; i < sectionsList.children.length; i++) {
-    const addSectionBtn1 =
-      sectionsList.children[i].querySelector(".add-section-btn");
-    addSectionBtn1.dataset.idx = `${i + 1}`;
-    const addTodoBtn1 = sectionsList.children[i].querySelector(".add-todo-btn");
-    const prevProject = addTodoBtn1.dataset.project;
-    addTodoBtn1.dataset.project =
-      prevProject.substring(0, prevProject.lastIndexOf("/") + 1) + (i - 1);
-  }
+  return sectionLi;
 }
 
 function syncTodoWithTodoDOM(todoElement, todo) {
@@ -586,7 +619,6 @@ function createTodo(projectElement, todo, idx) {
     todo.project = sectionIdx
       ? TodoList.projects[+projectIdx].sections[+sectionIdx]
       : TodoList.projects[+projectIdx];
-    console.log(todo.project);
 
     const svg = todoElement.querySelector(".due-date svg");
     todoElement.querySelectorAll(".due-date span").forEach((span) => {
@@ -601,6 +633,22 @@ function createTodo(projectElement, todo, idx) {
       if (oldProject !== todo.project) {
         oldProject.deleteTodo(todo);
         todo.project.addTodo(todo);
+
+        let domProjectIdx;
+        if (sectionIdx) {
+          domProjectIdx = +sectionIdx + 1;
+        } else {
+          domProjectIdx = 0;
+        }
+
+        const todoIdx = todo.project.todos.indexOf(todo);
+        const domTodoContainer =
+          sectionsList.children[domProjectIdx].querySelector(".tasks-list");
+
+        domTodoContainer.insertBefore(
+          todoElement,
+          domTodoContainer.children[todoIdx]
+        );
       } else {
         if (oldDuedate !== todo.dueDate) {
           if (
@@ -745,40 +793,6 @@ sectionNameInput.addEventListener("input", (e) => {
   }
 });
 
-const addSectionConfirm = addSectionForm.querySelector(".add-section-confirm");
-addSectionConfirm.addEventListener("click", (e) => {
-  e.preventDefault();
-  const sectionName = sectionNameInput.value;
-  const idx = +addSectionConfirm.form.dataset.idx;
-  const section = TodoList.projects[curProjectIndex].addSection(
-    sectionName,
-    idx - 1
-  );
-  savedTodoLocalStorage();
-  createSectionDOM(sectionName, idx, section);
-  populateProjectSelectorOptions();
-  addSectionConfirm.form.previousElementSibling.style.display = "";
-  addSectionConfirm.form.style.display = "none";
-  addSectionConfirm.form.remove();
-  addSectionConfirm.disabled = true;
-  addSectionConfirm.form.querySelector('input[name="section-name"]').value = "";
-});
-
-const cancelAddSection = addSectionForm.querySelector(".cancel-section");
-cancelAddSection.addEventListener("click", (e) => {
-  e.preventDefault();
-  cancelAddSection.previousElementSibling.disabled = true;
-  cancelAddSection.form.previousElementSibling.style.display = "";
-  cancelAddSection.form.style.display = "none";
-  cancelAddSection.form.firstElementChild.value = "";
-});
-
-cancelAddSection.form.firstElementChild.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    cancelAddSection.click();
-  }
-});
-
 const leftMenu = document.querySelector("#sidebar > ul:first-of-type");
 leftMenu.addEventListener("click", (e) => {
   let clicked = e.target;
@@ -816,6 +830,8 @@ projectNameInput.addEventListener("input", (e) => {
     addProjectConfirm.disabled = true;
   }
 });
+
+const domProjectMap = new Map();
 
 function renderProject(project) {
   calendarEl.style.display = "none";
