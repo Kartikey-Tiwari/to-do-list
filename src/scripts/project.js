@@ -16,7 +16,7 @@ class TodoContainer {
       return array.length - 1;
     } else {
       for (let i = 0; i < array.length; i++) {
-        if (!array[i].dueDate || array[i].dueDate > todo.dueDate) {
+        if (!array[i].dueDate || array[i].dueDate >= todo.dueDate) {
           array.splice(i, 0, todo);
           return i;
         }

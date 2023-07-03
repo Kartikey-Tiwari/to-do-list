@@ -517,6 +517,10 @@ button.todo-more-options {
   top: 3px;
 }
 
+.collapse-list.collapsed {
+  transform: rotate(-90deg);
+}
+
 .section-header {
   display: flex;
 }
@@ -527,6 +531,17 @@ button.todo-more-options {
 
 .section-name {
   padding: 6px 6px 5px 0;
+}
+
+.collapse-list,
+.tasks-list,
+.tasks-list ~ li {
+  transition: all 0.1s linear;
+}
+
+.tasks-list.collapsed,
+.tasks-list ~ li.collapsed {
+  display: none;
 }
 
 .modal-form-container {

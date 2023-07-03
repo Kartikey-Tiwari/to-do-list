@@ -19,6 +19,13 @@ import listPlugin from "@fullcalendar/list";
 
 let curProject = "Inbox";
 let curProjectIndex = 0;
+const todayTodos = new Project("Today");
+const domProjectMap = new Map();
+const domTodoCountMap = new Map();
+domTodoCountMap.set(
+  todayTodos,
+  document.querySelector("#today").querySelector(".project-todo-count span")
+);
 
 const updateTodoForm = document.querySelector(".update-todo-form");
 const updateTodoTitle = updateTodoForm.querySelector(".todo-title-input");
@@ -35,6 +42,7 @@ const cancelUpdateBtn = updateTodoForm.querySelector(".cancel-btn");
 
 const addSectionForm = document.querySelector(".add-section");
 const inlineForm = document.querySelector(".inline-form");
+
 function addDateTimeBtnEventListeners(e) {
   e.preventDefault();
   const tag = e.target.tagName;
@@ -134,31 +142,28 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
       date ? new Date(date + " " + time) : null,
       time ? true : false,
       +priority,
-      sectionIdx
-        ? TodoList.projects[+projectIdx].sections[+sectionIdx]
-        : TodoList.projects[+projectIdx],
+      todoContainer,
       false
     );
 
-    const idx = todoContainer.addTodo(todo);
+    if (!todo.dueTime && todo.dueDate) {
+      todo.dueDate = endOfDay(todo.dueDate);
+    }
+
+    let idx = todoContainer.addTodo(todo);
+    if (todo.dueDate && isToday(todo.dueDate)) {
+      idx = todayTodos.addTodo(todo);
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+    }
     savedTodoLocalStorage();
 
+    domTodoCountMap.get(TodoList.projects[+projectIdx]).textContent =
+      todoContainer.todos.length;
+
     if (+projectIdx === curProjectIndex) {
-      const i = sectionIdx ? +sectionIdx + 1 : 0;
-      createTodo(
-        sectionsList.children[i].querySelector(".tasks-list"),
-        todo,
-        idx
-      );
+      createTodo(domProjectMap.get(todo.project), todo, idx);
     } else if (curProjectIndex === -1) {
-      if (todo.dueDate && isToday(todo.dueDate)) {
-        const idx = todayTodos.addTodo(todo);
-        createTodo(
-          sectionsList.children[0].querySelector(".tasks-list"),
-          todo,
-          idx
-        );
-      }
+      createTodo(domProjectMap.get(todayTodos), todo, idx);
     }
 
     const p = +priority;
@@ -311,7 +316,6 @@ document.querySelectorAll(".time-input").forEach((input) => {
     }
   });
 });
-const todayTodos = new Project("Today");
 const saved = localStorage.getItem("todoList");
 const projectHTML = `
             <li>
@@ -358,7 +362,9 @@ if (saved) {
         todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
         todo._project = section;
         const newTodo = Object.assign(new Todo(), todo);
-        if (isToday(newTodo.dueDate)) todayTodos.addTodo(newTodo);
+        if (isToday(newTodo.dueDate)) {
+          todayTodos.addTodo(newTodo);
+        }
         return newTodo;
       });
 
@@ -374,7 +380,9 @@ if (saved) {
       todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
       todo._project = project;
       const newTodo = Object.assign(new Todo(), todo);
-      if (isToday(newTodo.dueDate)) todayTodos.addTodo(newTodo);
+      if (isToday(newTodo.dueDate)) {
+        todayTodos.addTodo(newTodo);
+      }
       return newTodo;
     });
   });
@@ -383,6 +391,10 @@ if (saved) {
     TodoList.projects[0].todosCount;
   document.querySelector("#today div span").textContent = todayTodos.todosCount;
 }
+domTodoCountMap.set(
+  TodoList.projects[0],
+  document.querySelector("#inbox").querySelector(".project-todo-count span")
+);
 
 function populateProjectSelectorOptions() {
   const projectSelector = document.querySelectorAll(".project-selector");
@@ -437,8 +449,16 @@ function createSectionDOM(name, idx, section) {
   const div = document.createElement("div");
   div.innerHTML = liHTML;
   const sectionLi = div.firstElementChild;
+  domProjectMap.set(section, sectionLi.querySelector(".tasks-list"));
 
   sectionsList.insertBefore(sectionLi, sectionsList.children[idx]);
+
+  const collapseBtn = sectionLi.querySelector(".collapse-list");
+  collapseBtn.addEventListener("click", () => {
+    domProjectMap.get(section).classList.toggle("collapsed");
+    domProjectMap.get(section).nextElementSibling.classList.toggle("collapsed");
+    collapseBtn.classList.toggle("collapsed");
+  });
 
   if (!name) sectionLi.querySelector(".section-header").innerHTML = "";
   else sectionLi.querySelector(".section-name").textContent = name;
@@ -487,13 +507,6 @@ function createSectionDOM(name, idx, section) {
     addTodoBtn.closest("li").appendChild(inlineForm);
     const dateInputBtn = inlineForm.querySelector(".duedate-input");
 
-    let sectionIdx =
-      TodoList.projects[curProjectIndex].sections.indexOf(section);
-    if (sectionIdx === -1) sectionIdx = "";
-
-    inlineForm.querySelector(
-      ".project-selector"
-    ).value = `${curProjectIndex}/${sectionIdx}`;
     if (curProject === "Today") {
       dateInputBtn.lastElementChild.textContent = "Today";
       dateInputBtn.classList.add("today");
@@ -503,6 +516,13 @@ function createSectionDOM(name, idx, section) {
       dateInputBtn.nextElementSibling.nextElementSibling.disabled = false;
       inlineForm.querySelector(".project-selector").value = "0/";
     } else {
+      let sectionIdx =
+        TodoList.projects[curProjectIndex].sections.indexOf(section);
+      if (sectionIdx === -1) sectionIdx = "";
+
+      inlineForm.querySelector(
+        ".project-selector"
+      ).value = `${curProjectIndex}/${sectionIdx}`;
       dateInputBtn.lastElementChild.textContent = "Date";
       dateInputBtn.classList.remove("today");
       dateInputBtn.nextElementSibling.value = "";
@@ -525,6 +545,7 @@ function createSectionDOM(name, idx, section) {
 
 function syncTodoWithTodoDOM(todoElement, todo) {
   const checkBox = todoElement.querySelector(".checkbox");
+  checkBox.classList.remove("checkbox-p1", "checkbox-p2", "checkbox-p3");
   if (todo.priority < 4) {
     checkBox.classList.add(`checkbox-p${todo.priority}`);
   }
@@ -592,6 +613,11 @@ function createTodo(projectElement, todo, idx) {
   const deleteBtn = todoElement.querySelector(".delete");
   deleteBtn.addEventListener("click", () => {
     todo.project.deleteTodo(todo);
+    domTodoCountMap.get(todo.project).textContent = todo.project.todos.length;
+    if (todo.dueDate && isToday(todo.dueDate)) {
+      todayTodos.deleteTodo(todo);
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+    }
     savedTodoLocalStorage();
     todoElement.classList.add("removed");
   });
@@ -625,10 +651,26 @@ function createTodo(projectElement, todo, idx) {
       span.textContent = "";
     });
     if (svg) svg.remove();
+    if (todo.dueDate && !todo.dueTime) {
+      todo.dueDate = endOfDay(todo.dueDate);
+    }
+    if (todo.dueDate && isToday(todo.dueDate) && !isToday(oldDuedate)) {
+      todayTodos.addTodo(todo);
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+    }
+    if (
+      (isToday(oldDuedate) && todo.dueDate && !isToday(todo.dueDate)) ||
+      !todo.dueDate
+    ) {
+      todayTodos.deleteTodo(todo);
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+    }
     if (curProjectIndex !== +projectIdx) {
       todoElement.remove();
       oldProject.deleteTodo(todo);
       todo.project.addTodo(todo);
+      domTodoCountMap.get(oldProject).textContent = oldProject.todos.length;
+      domTodoCountMap.get(todo.project).textContent = todo.project.todos.length;
     } else {
       if (oldProject !== todo.project) {
         oldProject.deleteTodo(todo);
@@ -697,6 +739,7 @@ function createTodo(projectElement, todo, idx) {
           }
         }
       }
+      removeDateTimeClasses(todoElement.querySelector(".due-date"));
       syncTodoWithTodoDOM(todoElement, todo);
     }
     savedTodoLocalStorage();
@@ -795,12 +838,15 @@ sectionNameInput.addEventListener("input", (e) => {
 
 const leftMenu = document.querySelector("#sidebar > ul:first-of-type");
 leftMenu.addEventListener("click", (e) => {
+  e.preventDefault();
   let clicked = e.target;
   if (clicked) {
     clicked = clicked.closest("li");
   } else return;
   if (clicked.id === "inbox") {
-    renderProject(TodoList.projects[0]);
+    if (curProjectIndex !== 0) {
+      renderProject(TodoList.projects[0]);
+    }
   } else if (clicked.id === "today") {
     if (curProjectIndex !== -1) {
       renderProject(todayTodos);
@@ -809,6 +855,7 @@ leftMenu.addEventListener("click", (e) => {
     }
   } else if (clicked.id === "upcoming") {
     main.firstElementChild.firstElementChild.textContent = "";
+    sectionsList.innerHTML = "";
     calendarEl.style.display = "block";
     calendar.render();
   }
@@ -831,17 +878,18 @@ projectNameInput.addEventListener("input", (e) => {
   }
 });
 
-const domProjectMap = new Map();
-
 function renderProject(project) {
   calendarEl.style.display = "none";
   main.firstElementChild.firstElementChild.textContent = project.name;
   sectionsList.innerHTML = "";
   curProjectIndex = TodoList.projects.indexOf(project);
   curProject = project.name;
-  createSectionDOM("", 0, project);
+  domProjectMap.clear();
+  const projectLi = createSectionDOM("", 0, project);
+  domProjectMap.set(project, projectLi.querySelector(".tasks-list"));
   project.sections.forEach((section, idx) => {
-    createSectionDOM(section.name, idx + 1, section);
+    const sectionLi = createSectionDOM(section.name, idx + 1, section);
+    domProjectMap.set(section, sectionLi.querySelector(".tasks-list"));
   });
 }
 
@@ -850,6 +898,10 @@ function createProjectDOM(project) {
   div.insertAdjacentHTML("afterbegin", projectHTML);
   const projectEl = div.firstElementChild;
   projectEl.querySelector(".project-name").textContent = project.name;
+  domTodoCountMap.set(
+    project,
+    projectEl.querySelector(".project-todo-count span")
+  );
   projectEl.querySelector(".project-todo-count span").textContent =
     project.todosCount;
   projectContainer.append(projectEl);
