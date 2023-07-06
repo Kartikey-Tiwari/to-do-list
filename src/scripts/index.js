@@ -10,6 +10,7 @@ import {
   isPast,
   endOfDay,
   startOfToday,
+  isEqual,
 } from "date-fns";
 
 import { Calendar } from "@fullcalendar/core";
@@ -21,11 +22,13 @@ let curProject = "Inbox";
 let curProjectIndex = 0;
 const todayTodos = new Project("Today");
 const domProjectMap = new Map();
+const domCompletedProjectMap = new Map();
 const domTodoCountMap = new Map();
 domTodoCountMap.set(
   todayTodos,
   document.querySelector("#today").querySelector(".project-todo-count span")
 );
+const projectOption = document.querySelector(".project-option");
 
 const updateTodoForm = document.querySelector(".update-todo-form");
 const updateTodoTitle = updateTodoForm.querySelector(".todo-title-input");
@@ -71,7 +74,7 @@ function savedTodoLocalStorage() {
 }
 
 function removeDateTimeClasses(e) {
-  e.classList.remove("today", "tomorrow", "this-week");
+  e.classList.remove("today", "tomorrow", "this-week", "overdue");
 }
 
 document.querySelectorAll(".cancel-btn").forEach((btn) => {
@@ -140,7 +143,7 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
       title,
       desc,
       date ? new Date(date + " " + time) : null,
-      time ? true : false,
+      date ? (time ? true : false) : false,
       +priority,
       todoContainer,
       false
@@ -153,12 +156,12 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
     let idx = todoContainer.addTodo(todo);
     if (todo.dueDate && isToday(todo.dueDate)) {
       idx = todayTodos.addTodo(todo);
-      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
     }
     savedTodoLocalStorage();
 
     domTodoCountMap.get(TodoList.projects[+projectIdx]).textContent =
-      todoContainer.todos.length;
+      TodoList.projects[+projectIdx].todosCount;
 
     if (+projectIdx === curProjectIndex) {
       createTodo(domProjectMap.get(todo.project), todo, idx);
@@ -233,6 +236,7 @@ function addDateTimeClasses(input) {
   } else {
     input.lastElementChild.textContent = "Date";
     input.nextElementSibling.nextElementSibling.disabled = true;
+    input.parentElement.querySelector(".clear-time-input").click();
   }
 }
 
@@ -352,10 +356,13 @@ if (saved) {
   });
 
   TodoList.projects.forEach((project, idx) => {
-    if (idx !== 0) createProjectDOM(project);
     project.sections = project.sections.map((section) => {
       return Object.assign(new TodoContainer(), section);
     });
+
+    if (idx !== 0) {
+      createProjectDOM(project);
+    }
 
     project.sections.forEach((section) => {
       section.todos = section.todos.map((todo) => {
@@ -383,6 +390,12 @@ if (saved) {
       if (isToday(newTodo.dueDate)) {
         todayTodos.addTodo(newTodo);
       }
+      return newTodo;
+    });
+    project.completedTodos = project.completedTodos.map((todo) => {
+      todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
+      todo._project = project;
+      const newTodo = Object.assign(new Todo(), todo);
       return newTodo;
     });
   });
@@ -420,7 +433,7 @@ function populateProjectSelectorOptions() {
 }
 const main = document.querySelector("main");
 const sectionsList = main.querySelector("ul#sections-list");
-const liHTML = `<li><section class="section"><header class="section-header"><div class="collapse-list"><svg width="24" height="24"><path fill="none" stroke=" currentColor" d="M16 10l-4 4-4-4"></path></svg></div><div class="section-info"><button class="section-name"><span></span></button><span></span></div><button class="todo-more-options"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ><gfill="none"stroke="currentColor" stroke-linecap="round" transform="translate(3 10)"><circle cx="2" cy="2" r="2"></circle><circle cx="9" cy="2" r="2"></circle><circle cx="16" cy="2" r="2"></circle></g></svg></button></header><ul class="tasks-list"></ul><li><button class="add-todo-btn"><span><svg width="13" height="13"><path d="M6 6V.5a.5.5 0 011 0V6h5.5a.5.5 0 110 1H7v5.5a.5.5 0 11-1 0V7H.5a.5.5 0 010-1H6z" fill="currentColor" fill-rule="evenodd"></path></svg></span><span>Add task</span></button></li></section><button class="add-section-btn">Add a section</button></li>`;
+const liHTML = `<li><section class="section"><header class="section-header"><div class="collapse-list"><svg width="24" height="24"><path fill="none" stroke=" currentColor" d="M16 10l-4 4-4-4"></path></svg></div><div class="section-info"><button class="section-name"><span></span></button><span></span></div><button class="todo-more-options"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ><gfill="none"stroke="currentColor" stroke-linecap="round" transform="translate(3 10)"><circle cx="2" cy="2" r="2"></circle><circle cx="9" cy="2" r="2"></circle><circle cx="16" cy="2" r="2"></circle></g></svg></button></header><ul class="tasks-list"></ul><li><button class="add-todo-btn"><span><svg width="13" height="13"><path d="M6 6V.5a.5.5 0 011 0V6h5.5a.5.5 0 110 1H7v5.5a.5.5 0 11-1 0V7H.5a.5.5 0 010-1H6z" fill="currentColor" fill-rule="evenodd"></path></svg></span><span>Add task</span></button></li><ul class="tasks-list completed-tasks-list hide"></section><button class="add-section-btn">Add a section</button></li>`;
 const todoHTML = `<li class="todo"><button class="checkbox-container"><div class="checkbox"><svg width="24" height="24"><path fill="currentColor" d="M11.23 13.7l-2.15-2a.55.55 0 0 0-.74-.01l.03-.03a.46.46 0 0 0 0 .68L11.24 15l5.4-5.01a.45.45 0 0 0 0-.68l.02.03a.55.55 0 0 0-.73 0l-4.7 4.35z"></path></svg></div></button><div class="todo-info"><div class="todo-title-desc"><span class="todo-title"></span><span class="todo-desc"></span></div><div class="due-date"><span></span><span></span></div><div class="todo-options"><button class="edit-todo"><svg width="24" height="24" style=""><g fill="none" fill-rule="evenodd"><path fill="currentColor" d="M9.5 19h10a.5.5 0 110 1h-10a.5.5 0 110-1z"></path><path stroke="currentColor" d="M4.42 16.03a1.5 1.5 0 00-.43.9l-.22 2.02a.5.5 0 00.55.55l2.02-.21a1.5 1.5 0 00.9-.44L18.7 7.4a1.5 1.5 0 000-2.12l-.7-.7a1.5 1.5 0 00-2.13 0L4.42 16.02z"></path></g></svg></button><button class="delete"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><g fill="none" fill-rule="evenodd"><path d="M0 0h24v24H0z"></path><rect width="14" height="1" x="5" y="6" fill="currentColor" rx="0.5"></rect><path fill="currentColor" d="M10 9h1v8h-1V9zm3 0h1v8h-1V9z"></path><path stroke="currentColor" d="M17.5 6.5h-11V18A1.5 1.5 0 008 19.5h8a1.5 1.5 0 001.5-1.5V6.5zm-9 0h7V5A1.5 1.5 0 0014 3.5h-4A1.5 1.5 0 008.5 5v1.5z"></path></g></svg></button></div></div></li>`;
 
 const calendarEl = main.querySelector("#calendar");
@@ -450,6 +463,10 @@ function createSectionDOM(name, idx, section) {
   div.innerHTML = liHTML;
   const sectionLi = div.firstElementChild;
   domProjectMap.set(section, sectionLi.querySelector(".tasks-list"));
+  domCompletedProjectMap.set(
+    section,
+    sectionLi.querySelector(".completed-tasks-list")
+  );
 
   sectionsList.insertBefore(sectionLi, sectionsList.children[idx]);
 
@@ -534,13 +551,30 @@ function createSectionDOM(name, idx, section) {
       btn.style.display = "none";
     });
   });
-  const tasksList = sectionLi.querySelector(".tasks-list");
+  const tasksList = sectionLi.querySelector(".tasks-list:first-of-type");
+  const completedTasksList = sectionLi.querySelector(".completed-tasks-list");
+  if (completedShown) {
+    completedTasksList.classList.remove("hide");
+  }
 
   section.todos.forEach((todo, idx) => {
     createTodo(tasksList, todo, idx);
   });
+  section.completedTodos.forEach((completedTodo, idx) => {
+    createTodo(completedTasksList, completedTodo, idx);
+  });
 
   return sectionLi;
+}
+
+function addRemoveCompleteClass(todo, todoElement) {
+  if (todo.completed) {
+    todoElement.querySelector(".todo-title").classList.add("completed");
+    todoElement.querySelector(".checkbox").classList.add("completed");
+  } else {
+    todoElement.querySelector(".todo-title").classList.remove("completed");
+    todoElement.querySelector(".checkbox").classList.remove("completed");
+  }
 }
 
 function syncTodoWithTodoDOM(todoElement, todo) {
@@ -551,6 +585,8 @@ function syncTodoWithTodoDOM(todoElement, todo) {
   }
   todoElement.querySelector(".todo-title").textContent = todo.title;
   todoElement.querySelector(".todo-desc").textContent = todo.description;
+
+  addRemoveCompleteClass(todo, todoElement);
 
   const today = new Date();
   const nextWeek = addDays(today, 7);
@@ -575,6 +611,9 @@ function syncTodoWithTodoDOM(todoElement, todo) {
       todoElement.querySelector(".due-date").classList.add("this-week");
     } else {
       date = format(todo.dueDate, "dd MMM yyyy");
+    }
+    if (!todo.completed && isPast(todo.dueDate)) {
+      todoElement.querySelector(".due-date").classList.add("overdue");
     }
 
     todoElement.querySelector(".due-date span").textContent = date;
@@ -603,30 +642,116 @@ function createTodo(projectElement, todo, idx) {
   syncTodoWithTodoDOM(todoElement, todo);
 
   const checkBoxBtn = todoElement.querySelector(".checkbox-container");
-  checkBoxBtn.addEventListener("click", () => {
-    todo.completed = true;
+
+  checkBoxBtn.addEventListener(
+    "click",
+    !todo.completed ? completeTodo : uncompleteTodo
+  );
+
+  const updateBtn = todoElement.querySelector(".edit-todo");
+
+  function completeTodo() {
+    const project = TodoList.projects.find(
+      (project) =>
+        project.todos.indexOf(todo) !== -1 ||
+        project.sections.find((section) => section.todos.indexOf(todo) !== -1)
+    );
     todo.project.completeTodo(todo.project.todos.indexOf(todo));
     todoElement.classList.add("removed");
+    function handleTransitionEnd() {
+      domTodoCountMap.get(project).textContent = project.todosCount;
+      if (curProjectIndex !== -1) {
+        domCompletedProjectMap
+          .get(todo.project)
+          .insertBefore(
+            todoElement,
+            domCompletedProjectMap.get(todo.project).children[
+              todo.project.completedTodos.indexOf(todo)
+            ]
+          );
+      } else {
+        todoElement.remove();
+      }
+      todoElement.classList.remove("removed");
+      addRemoveCompleteClass(todo, todoElement);
+      if (isToday(todo.dueDate)) {
+        todayTodos.deleteTodo(todo);
+        domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
+      }
+      todoElement.querySelector(".due-date").classList.remove("overdue");
+      todoElement.removeEventListener("transitionend", handleTransitionEnd);
+      updateBtn.classList.add("hide");
+      updateBtn.disabled = true;
+    }
+    checkBoxBtn.removeEventListener("click", completeTodo);
+    checkBoxBtn.addEventListener("click", uncompleteTodo);
+    todoElement.addEventListener("transitionend", handleTransitionEnd);
     savedTodoLocalStorage();
-  });
+  }
+
+  function uncompleteTodo() {
+    const project = TodoList.projects.find(
+      (project) =>
+        project.completedTodos.indexOf(todo) !== -1 ||
+        project.sections.find(
+          (section) => section.completedTodos.indexOf(todo) !== -1
+        )
+    );
+    todo.project.uncompleteTodo(todo.project.completedTodos.indexOf(todo));
+    todoElement.classList.add("removed");
+    function handleTransitionEnd() {
+      domTodoCountMap.get(project).textContent = project.todosCount;
+      domProjectMap
+        .get(todo.project)
+        .insertBefore(
+          todoElement,
+          domProjectMap.get(todo.project).children[
+            todo.project.todos.indexOf(todo)
+          ]
+        );
+      todoElement.classList.remove("removed");
+      if (isToday(todo.dueDate)) {
+        todayTodos.addTodo(todo);
+        domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
+      }
+      if (isPast(todo.dueDate)) {
+        todoElement.querySelector(".due-date").classList.add("overdue");
+      }
+      addRemoveCompleteClass(todo, todoElement);
+      todoElement.removeEventListener("transitionend", handleTransitionEnd);
+      updateBtn.classList.remove("hide");
+      updateBtn.disabled = false;
+    }
+    checkBoxBtn.removeEventListener("click", uncompleteTodo);
+    checkBoxBtn.addEventListener("click", completeTodo);
+    todoElement.addEventListener("transitionend", handleTransitionEnd);
+    savedTodoLocalStorage();
+  }
 
   const deleteBtn = todoElement.querySelector(".delete");
   deleteBtn.addEventListener("click", () => {
+    const project = TodoList.projects.find(
+      (project) =>
+        project.todos.indexOf(todo) !== -1 ||
+        project.sections.find((section) => section.todos.indexOf(todo) !== -1)
+    );
     todo.project.deleteTodo(todo);
-    domTodoCountMap.get(todo.project).textContent = todo.project.todos.length;
+    domTodoCountMap.get(project).textContent = project.todosCount;
     if (todo.dueDate && isToday(todo.dueDate)) {
       todayTodos.deleteTodo(todo);
-      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
     }
     savedTodoLocalStorage();
     todoElement.classList.add("removed");
-  });
-  todoElement.addEventListener("transitionend", (e) => {
-    if (e.target === todoElement) todoElement.remove();
+    todoElement.addEventListener("transitionend", () => {
+      todoElement.remove();
+    });
   });
 
   function updateTodo(e) {
     e.preventDefault();
+    updateTodoForm.remove();
+
     const title = updateTodoTitle.textContent;
     const description = updateTodoDescription.textContent;
     const dueDate = updateTodoDate.nextElementSibling.value;
@@ -634,6 +759,11 @@ function createTodo(projectElement, todo, idx) {
     const priority = updateTodoPriority.value;
     const [projectIdx, sectionIdx] = updateTodoProject.value.split("/");
 
+    const oldProject_ = TodoList.projects.find(
+      (project) =>
+        project.todos.indexOf(todo) !== -1 ||
+        project.sections.find((section) => section.todos.indexOf(todo) !== -1)
+    );
     const oldProject = todo.project;
     const oldDuedate = todo.dueDate;
 
@@ -656,87 +786,66 @@ function createTodo(projectElement, todo, idx) {
     }
     if (todo.dueDate && isToday(todo.dueDate) && !isToday(oldDuedate)) {
       todayTodos.addTodo(todo);
-      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
     }
     if (
       (isToday(oldDuedate) && todo.dueDate && !isToday(todo.dueDate)) ||
       !todo.dueDate
     ) {
       todayTodos.deleteTodo(todo);
-      domTodoCountMap.get(todayTodos).textContent = todayTodos.todos.length;
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
+    }
+    if (
+      isToday(oldDuedate) &&
+      isToday(todo.dueDate) &&
+      !isEqual(oldDuedate, todo.dueDate)
+    ) {
+      todayTodos.deleteTodo(todo);
+      todayTodos.addTodo(todo);
     }
     if (curProjectIndex !== +projectIdx) {
-      todoElement.remove();
+      if (
+        curProjectIndex !== -1 ||
+        (curProjectIndex === -1 && !todo.dueDate) ||
+        (todo.dueDate && !isToday(todo.dueDate))
+      )
+        todoElement.remove();
       oldProject.deleteTodo(todo);
       todo.project.addTodo(todo);
-      domTodoCountMap.get(oldProject).textContent = oldProject.todos.length;
-      domTodoCountMap.get(todo.project).textContent = todo.project.todos.length;
+      domTodoCountMap.get(oldProject_).textContent = oldProject_.todosCount;
+      domTodoCountMap.get(TodoList.projects[+projectIdx]).textContent =
+        todo.project.todosCount;
+      if (curProjectIndex === -1 && !isEqual(oldDuedate, todo.dueDate)) {
+        todoElement.parentElement.insertBefore(
+          todoElement,
+          todoElement.parentElement.children[todayTodos.todos.indexOf(todo)]
+        );
+      }
+      syncTodoWithTodoDOM(todoElement, todo);
     } else {
       if (oldProject !== todo.project) {
         oldProject.deleteTodo(todo);
         todo.project.addTodo(todo);
 
-        let domProjectIdx;
-        if (sectionIdx) {
-          domProjectIdx = +sectionIdx + 1;
-        } else {
-          domProjectIdx = 0;
-        }
-
         const todoIdx = todo.project.todos.indexOf(todo);
-        const domTodoContainer =
-          sectionsList.children[domProjectIdx].querySelector(".tasks-list");
+        const domTodoContainer = domProjectMap.get(todo.project);
 
         domTodoContainer.insertBefore(
           todoElement,
           domTodoContainer.children[todoIdx]
         );
       } else {
-        if (oldDuedate !== todo.dueDate) {
-          if (
-            !todo.dueDate ||
-            (todo.project.todos[todo.project.todos.length - 1].dueDate &&
-              todo.project.todos[todo.project.todos.length - 1].dueDate <
-                todo.dueDate)
-          ) {
-            for (
-              let i = todo.project.todos.indexOf(todo);
-              i < todo.project.todos.length - 1;
-              i++
-            ) {
-              todo.project.todos[i] = todo.project.todos[i + 1];
-            }
-            todo.project.todos[todo.project.todos.length - 1] = todo;
-            todoElement.parentElement.append(todoElement);
-          } else {
-            for (let i = 0; i < todo.project.todos.length; i++) {
-              if (
-                !todo.project.todos[i].dueDate ||
-                todo.project.todos[i].dueDate >= todo.dueDate
-              ) {
-                if (todo.project.todos.indexOf(todo) < i) {
-                  for (let j = todo.project.todos.indexOf(todo); j < i; j++) {
-                    [todo.project.todos[j], todo.project.todos[j + 1]] = [
-                      todo.project.todos[j + 1],
-                      todo.project.todos[j],
-                    ];
-                  }
-                } else {
-                  for (let j = todo.project.todos.indexOf(todo); j > i; j--) {
-                    [todo.project.todos[j], todo.project.todos[j - 1]] = [
-                      todo.project.todos[j - 1],
-                      todo.project.todos[j],
-                    ];
-                  }
-                }
-                todoElement.parentElement.insertBefore(
-                  todoElement,
-                  todoElement.parentElement.children[i]
-                );
-                break;
-              }
-            }
-          }
+        if (!isEqual(oldDuedate, todo.dueDate)) {
+          const oldIdx = todo.project.todos.indexOf(todo);
+          todo.project.deleteTodo(todo);
+          todo.project.addTodo(todo);
+          const newIdx = todo.project.todos.indexOf(todo);
+          todoElement.parentElement.insertBefore(
+            todoElement,
+            todoElement.parentElement.children[
+              oldIdx <= newIdx ? newIdx + 1 : newIdx
+            ]
+          );
         }
       }
       removeDateTimeClasses(todoElement.querySelector(".due-date"));
@@ -766,13 +875,31 @@ function createTodo(projectElement, todo, idx) {
     updateTodoDescription.dispatchEvent(event);
     updateTodoPriority.value = todo.priority;
 
-    let todoProjectIdx = TodoList.projects[curProjectIndex].sections.indexOf(
-      todo.project
-    );
+    let todoProjectIdx, projectIdx;
+    if (curProjectIndex !== -1) {
+      todoProjectIdx = TodoList.projects[curProjectIndex].sections.indexOf(
+        todo.project
+      );
+    } else {
+      const project = TodoList.projects.find(
+        (project) =>
+          project.todos.indexOf(todo) !== -1 ||
+          project.sections.find((section) => section.todos.indexOf(todo) !== -1)
+      );
+      projectIdx = TodoList.projects.indexOf(project).toString();
+
+      todoProjectIdx = TodoList.projects[projectIdx].sections.indexOf(
+        todo.project
+      );
+    }
     if (todoProjectIdx === -1) todoProjectIdx = "";
     else todoProjectIdx = todoProjectIdx.toString();
 
-    updateTodoProject.value = `${curProjectIndex}/${todoProjectIdx}`;
+    if (curProjectIndex === -1) {
+      updateTodoProject.value = `${projectIdx}/${todoProjectIdx}`;
+    } else {
+      updateTodoProject.value = `${curProjectIndex}/${todoProjectIdx}`;
+    }
     if (todo.dueDate) {
       updateTodoDate.nextElementSibling.value = `${todo.dueDate.getFullYear()}-${(
         todo.dueDate.getMonth() + 1
@@ -805,7 +932,6 @@ function createTodo(projectElement, todo, idx) {
     todoElement.style.display = "none";
   }
 
-  const updateBtn = todoElement.querySelector(".edit-todo");
   updateBtn.addEventListener("click", bindUpdateFormTodo);
 }
 
@@ -845,15 +971,18 @@ leftMenu.addEventListener("click", (e) => {
   } else return;
   if (clicked.id === "inbox") {
     if (curProjectIndex !== 0) {
+      projectOption.style.display = "";
       renderProject(TodoList.projects[0]);
     }
   } else if (clicked.id === "today") {
     if (curProjectIndex !== -1) {
+      projectOption.style.display = "none";
       renderProject(todayTodos);
       main.firstElementChild.firstElementChild.textContent =
         "Today " + format(startOfToday(), "EEE dd MMM");
     }
   } else if (clicked.id === "upcoming") {
+    projectOption.style.display = "";
     main.firstElementChild.firstElementChild.textContent = "";
     sectionsList.innerHTML = "";
     calendarEl.style.display = "block";
@@ -885,11 +1014,11 @@ function renderProject(project) {
   curProjectIndex = TodoList.projects.indexOf(project);
   curProject = project.name;
   domProjectMap.clear();
-  const projectLi = createSectionDOM("", 0, project);
-  domProjectMap.set(project, projectLi.querySelector(".tasks-list"));
+  domCompletedProjectMap.clear();
+  createSectionDOM("", 0, project);
+
   project.sections.forEach((section, idx) => {
-    const sectionLi = createSectionDOM(section.name, idx + 1, section);
-    domProjectMap.set(section, sectionLi.querySelector(".tasks-list"));
+    createSectionDOM(section.name, idx + 1, section);
   });
 }
 
@@ -907,6 +1036,7 @@ function createProjectDOM(project) {
   projectContainer.append(projectEl);
   projectEl.addEventListener("click", () => {
     renderProject(project);
+    projectOption.style.display = "";
   });
 }
 
@@ -938,4 +1068,59 @@ projectNameInput.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     cancelAddProject.click();
   }
+});
+
+const projectOptionContainer = document.querySelector(
+  ".project-option-container"
+);
+projectOption.addEventListener("click", (e) => {
+  projectOption.firstElementChild.classList.add("hide");
+  if (curProjectIndex !== 0) {
+    projectOptionContainer.lastElementChild.classList.remove("hide");
+  }
+  projectOptionContainer.firstElementChild.classList.remove("hide");
+});
+
+document.addEventListener("click", (e) => {
+  if (
+    !projectOptionContainer.contains(e.target) &&
+    !projectOption.contains(e.target)
+  ) {
+    closeProjectOptions();
+  }
+});
+
+function closeProjectOptions() {
+  projectOptionContainer.firstElementChild.classList.add("hide");
+  projectOptionContainer.lastElementChild.classList.add("hide");
+  projectOption.firstElementChild.classList.remove("hide");
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeProjectOptions();
+  }
+});
+
+const toggleCompleted = document.querySelector(".toggle-completed");
+let completedShown = false;
+const deleteProject = document.querySelector(".delete-project");
+
+toggleCompleted.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  closeProjectOptions();
+  completedShown = !completedShown;
+  if (!completedShown) {
+    projectOptionContainer.firstElementChild.lastElementChild.textContent =
+      "Show Completed";
+  } else {
+    projectOptionContainer.firstElementChild.lastElementChild.textContent =
+      "Hide Completed";
+  }
+  sectionsList
+    .querySelectorAll(".completed-tasks-list")
+    .forEach((tasksList) => {
+      tasksList.classList.toggle("hide");
+    });
 });

@@ -30,7 +30,14 @@ class TodoContainer {
 
   completeTodo(index) {
     const [todo] = this.todos.splice(index, 1);
+    todo.completed = true;
     this.insertTodoSorted(this.completedTodos, todo);
+  }
+
+  uncompleteTodo(index) {
+    const [todo] = this.completedTodos.splice(index, 1);
+    todo.completed = false;
+    this.insertTodoSorted(this.todos, todo);
   }
 
   removeCompletedTodo(todo) {

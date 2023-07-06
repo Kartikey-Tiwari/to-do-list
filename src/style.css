@@ -280,9 +280,17 @@ main > div {
   box-sizing: content-box;
 }
 
+.checkbox.completed {
+  background-color: grey;
+}
+
 .checkbox-p1 {
   border: 2px solid rgb(209, 69, 59);
   background-color: rgba(209, 69, 59, 0.1);
+}
+
+.checkbox-p1.completed {
+  background-color: rgb(209, 69, 59);
 }
 
 .checkbox-p2 {
@@ -290,9 +298,17 @@ main > div {
   background-color: rgba(235, 137, 9, 0.1);
 }
 
+.checkbox-p2.completed {
+  background-color: rgb(235, 137, 9);
+}
+
 .checkbox-p3 {
   border: 2px solid rgb(36, 111, 224);
   background-color: rgba(36, 111, 224, 0.1);
+}
+
+.checkbox-p3.completed {
+  background-color: rgb(36, 111, 224);
 }
 
 .checkbox svg {
@@ -315,6 +331,11 @@ main > div {
 
 .checkbox-p3 svg {
   color: rgb(36, 111, 224);
+}
+
+.checkbox.completed svg {
+  color: white;
+  opacity: 1;
 }
 
 .checkbox:hover svg {
@@ -371,6 +392,7 @@ input[type="time"] {
   position: relative;
   width: 100%;
   gap: 10px;
+  opacity: 1;
   transition: all 0.4s linear;
 }
 
@@ -388,7 +410,7 @@ input[type="time"] {
 
 .section {
   flex: 1;
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
 }
 
 .todo-options {
@@ -417,6 +439,11 @@ button.todo-more-options {
 
 .todo-title {
   font-size: 14px;
+}
+
+.todo-title.completed {
+  text-decoration: line-through;
+  color: rgb(0, 0, 0, 0.56);
 }
 
 .todo-desc {
@@ -776,6 +803,7 @@ button.todo-more-options {
   flex-direction: column;
   display: none;
   gap: 10px;
+  margin: 15px 0 10px 0;
 }
 
 .add-section input {
@@ -858,4 +886,37 @@ button.todo-more-options {
 
 .todo-options button:active svg {
   transform: scale(0.8);
+}
+
+.project-option {
+  position: relative;
+}
+
+.project-option-container {
+  position: absolute;
+  background-color: #eee;
+  border-radius: 10px;
+  right: 0;
+  top: 0;
+}
+
+.toggle-completed,
+.delete-project {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  padding: 5px;
+}
+
+.hide {
+  display: none;
+}
+
+.toggle-completed:hover,
+.delete-project:hover {
+  transform: translateX(-5px);
+}
+
+.completed-tasks-list:not(:empty) {
+  margin-top: 15px;
 }
