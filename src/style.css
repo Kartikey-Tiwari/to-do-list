@@ -134,6 +134,11 @@ header button:hover {
   flex-direction: column;
   font-size: 14px;
   position: fixed;
+  transition: all 0.2s ease-in;
+}
+
+#sidebar.hidden {
+  transform: translateX(-221px);
 }
 
 #sidebar > * {
@@ -234,6 +239,12 @@ ul li {
 main {
   width: calc(100vw - 221px);
   margin-left: 221px;
+  transition: all 0.2s ease-in;
+}
+
+main.full {
+  margin-left: calc(221px / 2);
+  margin-right: calc(221px / 2);
 }
 
 main > div {
@@ -410,7 +421,14 @@ input[type="time"] {
 
 .section {
   flex: 1;
-  /* margin-bottom: 20px; */
+}
+
+#sections-list li {
+  transition: all 0.3s ease-out;
+}
+
+#sections-list li.removed {
+  opacity: 0;
 }
 
 .todo-options {
@@ -572,7 +590,12 @@ button.todo-more-options {
 }
 
 .modal-form-container {
-  margin-left: 221px;
+  position: absolute;
+  inset: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 1001;
 }
 
 .form,
@@ -594,7 +617,7 @@ button.todo-more-options {
 }
 
 .todo-title-input,
-.todo-title-input ~ .placeholder {
+.todo-title-input + .placeholder {
   font-size: 20px;
   font-weight: 700;
   line-height: 25px;
@@ -604,36 +627,36 @@ button.todo-more-options {
   z-index: -1;
 }
 
-.todo-title-input ~ .placeholder {
+.todo-title-input + .placeholder {
   position: absolute;
   top: 0;
 }
 
-.todo-desc-input ~ .placeholder {
+.todo-desc-input + .placeholder {
   position: absolute;
   font-weight: normal;
   top: 27px;
 }
 
 .main-form .todo-title-input,
-.main-form .todo-title-input ~ .placeholder {
+.main-form .todo-title-input + .placeholder {
   font-size: 16px;
   line-height: 22px;
 }
 
-.todo-title-input ~ .placeholder,
-.todo-desc-input ~ .placeholder {
+.todo-title-input + .placeholder,
+.todo-desc-input + .placeholder {
   color: rgba(0, 0, 0, 0.4);
 }
 
 .todo-desc-input,
-.todo-desc-input .placeholder {
+.todo-desc-input + .placeholder {
   font-size: 13px;
   line-height: 22px;
 }
 
 .main-form .todo-desc-input,
-.main-form .todo-desc-input ~ .placeholder {
+.main-form .todo-desc-input + .placeholder {
   font-size: 12px;
   line-height: 18px;
 }
@@ -757,6 +780,18 @@ button.todo-more-options {
 .modal-form {
   box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.35);
   border-radius: 5px;
+  width: min(550px, 80vw);
+  z-index: 1002;
+  display: block;
+  position: absolute;
+  top: 50vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  background-color: white;
+}
+
+.modal-form .todo-desc-input + .placeholder {
+  top: 30px;
 }
 
 .main-form {
@@ -906,6 +941,14 @@ button.todo-more-options {
   align-items: center;
   width: max-content;
   padding: 5px;
+}
+
+.delete-section {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #eee;
+  border-radius: 5px;
 }
 
 .hide {

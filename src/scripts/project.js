@@ -100,6 +100,13 @@ class Project extends TodoContainer {
     return newSection;
   }
 
+  removeSection(section) {
+    const idx = this._sections.indexOf(section);
+    if (idx !== -1) {
+      this._sections.splice(idx, 1);
+    }
+  }
+
   get description() {
     return this._description;
   }

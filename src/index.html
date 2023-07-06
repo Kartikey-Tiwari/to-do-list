@@ -13,7 +13,7 @@
     <header>
       <nav>
         <div id="left-nav-btns">
-          <button>
+          <button class="toggle-sidebar">
             <i class="fa-solid fa-bars fa-lg"></i>
           </button>
           <button>
@@ -36,7 +36,7 @@
           </div>
         </div>
         <div id="right-nav-btn">
-          <button>
+          <button class="open-modal-form-btn">
             <i class="fa-solid fa-plus fa-lg"></i>
           </button>
         </div>
@@ -246,7 +246,7 @@
         </div>
       </main>
     </div>
-    <div class="modal-form-container">
+    <div class="modal-form-container hide">
       <form class="modal-form form">
         <div class="todo-input-text">
           <div contenteditable="true" class="todo-title-input"></div>
@@ -254,7 +254,7 @@
           <div class="todo-desc-input" contenteditable="true"></div>
           <div class="placeholder">Description</div>
         </div>
-        <div class="flex-row">
+        <div class="input-btn-row flex-row">
           <button class="duedate-input todo-input-btn">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -270,26 +270,26 @@
             </svg>
             <span>Date</span>
           </button>
-          <input type="date" />
-          <button class="time-input todo-input-btn">
+          <input type="date" name="date" />
+          <button disabled class="time-input todo-input-btn">
             <span>Time</span>
           </button>
-          <input type="time" />
-          <select class="todo-input-btn">
-            <option>Priority 1</option>
-            <option>Priority 2</option>
-            <option>Priority 3</option>
-            <option selected>Priority 4</option>
+          <input name="time" type="time" />
+          <span class="clear-time-input" title="Clear due time">x</span>
+          <select name="priority" class="todo-input-btn">
+            <option value="1">Priority 1</option>
+            <option value="2">Priority 2</option>
+            <option value="3">Priority 3</option>
+            <option selected value="4">Priority 4</option>
           </select>
         </div>
         <div class="input-row flex-row">
-          <select class="project-selector">
-            <option>Inbox</option>
-            <option></option>
-          </select>
+          <select name="project" class="project-selector"></select>
           <div>
             <button class="cancel-btn input-btn">Cancel</button>
-            <button class="add-task-btn input-btn confirm-btn">Add Task</button>
+            <button disabled class="add-task-btn input-btn confirm-btn">
+              Add Task
+            </button>
           </div>
         </div>
       </form>

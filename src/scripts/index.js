@@ -24,6 +24,7 @@ const todayTodos = new Project("Today");
 const domProjectMap = new Map();
 const domCompletedProjectMap = new Map();
 const domTodoCountMap = new Map();
+const domProjectLinkMap = new Map();
 domTodoCountMap.set(
   todayTodos,
   document.querySelector("#today").querySelector(".project-todo-count span")
@@ -45,6 +46,7 @@ const cancelUpdateBtn = updateTodoForm.querySelector(".cancel-btn");
 
 const addSectionForm = document.querySelector(".add-section");
 const inlineForm = document.querySelector(".inline-form");
+const modalForm = document.querySelector(".modal-form");
 
 function addDateTimeBtnEventListeners(e) {
   e.preventDefault();
@@ -60,6 +62,9 @@ inlineForm
   .querySelector(".input-btn-row")
   .addEventListener("click", addDateTimeBtnEventListeners);
 updateTodoForm
+  .querySelector(".input-btn-row")
+  .addEventListener("click", addDateTimeBtnEventListeners);
+modalForm
   .querySelector(".input-btn-row")
   .addEventListener("click", addDateTimeBtnEventListeners);
 
@@ -80,9 +85,11 @@ function removeDateTimeClasses(e) {
 document.querySelectorAll(".cancel-btn").forEach((btn) => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
-    main.querySelectorAll(".add-todo-btn").forEach((button) => {
-      button.style.display = "flex";
-    });
+    if (!btn.form.classList.contains("modal-form")) {
+      main.querySelectorAll(".add-todo-btn").forEach((button) => {
+        button.style.display = "flex";
+      });
+    }
     btn.form.style.display = "none";
 
     const desc = btn.form.querySelector(".todo-desc-input");
@@ -262,18 +269,11 @@ formTextInputs.forEach((input) => {
     if (input.textContent === "") {
       input.nextElementSibling.style.display = "block";
       if (input.classList.contains("todo-title-input")) {
-        input
-          .closest(".todo-input-text")
-          .querySelector(".todo-desc-input ~ .placeholder").style.top = "27px";
         addTodo.disabled = true;
       }
     } else {
       input.nextElementSibling.style.display = "none";
       if (input.classList.contains("todo-title-input")) {
-        input
-          .closest(".todo-input-text")
-          .querySelector(".todo-desc-input ~ .placeholder").style.top =
-          5 + input.clientHeight + "px";
         addTodo.disabled = false;
       }
     }
@@ -433,7 +433,7 @@ function populateProjectSelectorOptions() {
 }
 const main = document.querySelector("main");
 const sectionsList = main.querySelector("ul#sections-list");
-const liHTML = `<li><section class="section"><header class="section-header"><div class="collapse-list"><svg width="24" height="24"><path fill="none" stroke=" currentColor" d="M16 10l-4 4-4-4"></path></svg></div><div class="section-info"><button class="section-name"><span></span></button><span></span></div><button class="todo-more-options"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ><gfill="none"stroke="currentColor" stroke-linecap="round" transform="translate(3 10)"><circle cx="2" cy="2" r="2"></circle><circle cx="9" cy="2" r="2"></circle><circle cx="16" cy="2" r="2"></circle></g></svg></button></header><ul class="tasks-list"></ul><li><button class="add-todo-btn"><span><svg width="13" height="13"><path d="M6 6V.5a.5.5 0 011 0V6h5.5a.5.5 0 110 1H7v5.5a.5.5 0 11-1 0V7H.5a.5.5 0 010-1H6z" fill="currentColor" fill-rule="evenodd"></path></svg></span><span>Add task</span></button></li><ul class="tasks-list completed-tasks-list hide"></section><button class="add-section-btn">Add a section</button></li>`;
+const liHTML = `<li><section class="section"><header class="section-header"><div class="collapse-list"><svg width="24" height="24"><path fill="none" stroke=" currentColor" d="M16 10l-4 4-4-4"></path></svg></div><div class="section-info"><button class="section-name"><span></span></button><span></span></div><button class="todo-more-options"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ><g fill="none"stroke="currentColor" stroke-linecap="round" transform="translate(3 10)"><circle cx="2" cy="2" r="2"></circle><circle cx="9" cy="2" r="2"></circle><circle cx="16" cy="2" r="2"></circle></g></svg><div class="delete-section delete-project hide">Delete Section</div></button></header><ul class="tasks-list"></ul><li><button class="add-todo-btn"><span><svg width="13" height="13"><path d="M6 6V.5a.5.5 0 011 0V6h5.5a.5.5 0 110 1H7v5.5a.5.5 0 11-1 0V7H.5a.5.5 0 010-1H6z" fill="currentColor" fill-rule="evenodd"></path></svg></span><span>Add task</span></button></li><ul class="tasks-list completed-tasks-list hide"></section><button class="add-section-btn">Add a section</button></li>`;
 const todoHTML = `<li class="todo"><button class="checkbox-container"><div class="checkbox"><svg width="24" height="24"><path fill="currentColor" d="M11.23 13.7l-2.15-2a.55.55 0 0 0-.74-.01l.03-.03a.46.46 0 0 0 0 .68L11.24 15l5.4-5.01a.45.45 0 0 0 0-.68l.02.03a.55.55 0 0 0-.73 0l-4.7 4.35z"></path></svg></div></button><div class="todo-info"><div class="todo-title-desc"><span class="todo-title"></span><span class="todo-desc"></span></div><div class="due-date"><span></span><span></span></div><div class="todo-options"><button class="edit-todo"><svg width="24" height="24" style=""><g fill="none" fill-rule="evenodd"><path fill="currentColor" d="M9.5 19h10a.5.5 0 110 1h-10a.5.5 0 110-1z"></path><path stroke="currentColor" d="M4.42 16.03a1.5 1.5 0 00-.43.9l-.22 2.02a.5.5 0 00.55.55l2.02-.21a1.5 1.5 0 00.9-.44L18.7 7.4a1.5 1.5 0 000-2.12l-.7-.7a1.5 1.5 0 00-2.13 0L4.42 16.02z"></path></g></svg></button><button class="delete"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><g fill="none" fill-rule="evenodd"><path d="M0 0h24v24H0z"></path><rect width="14" height="1" x="5" y="6" fill="currentColor" rx="0.5"></rect><path fill="currentColor" d="M10 9h1v8h-1V9zm3 0h1v8h-1V9z"></path><path stroke="currentColor" d="M17.5 6.5h-11V18A1.5 1.5 0 008 19.5h8a1.5 1.5 0 001.5-1.5V6.5zm-9 0h7V5A1.5 1.5 0 0014 3.5h-4A1.5 1.5 0 008.5 5v1.5z"></path></g></svg></button></div></div></li>`;
 
 const calendarEl = main.querySelector("#calendar");
@@ -563,6 +563,39 @@ function createSectionDOM(name, idx, section) {
   section.completedTodos.forEach((completedTodo, idx) => {
     createTodo(completedTasksList, completedTodo, idx);
   });
+
+  const sectionMoreOptions = sectionLi.querySelector(".todo-more-options");
+  if (sectionMoreOptions) {
+    const deleteSectionBtn = sectionMoreOptions.lastElementChild;
+    deleteSectionBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      TodoList.projects[curProjectIndex].removeSection(section);
+      domTodoCountMap.get(TodoList.projects[curProjectIndex]).textContent =
+        TodoList.projects[curProjectIndex].todosCount;
+      section.todos.forEach((todo) => {
+        if (isToday(todo.dueDate)) {
+          todayTodos.deleteTodo(todo);
+        }
+      });
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
+      domProjectLinkMap.delete(section);
+      domProjectMap.delete(section);
+      domTodoCountMap.delete(section);
+      domCompletedProjectMap.delete(section);
+      sectionLi.classList.add("removed");
+      sectionLi.addEventListener("transitionend", () => {
+        sectionLi.remove();
+      });
+      savedTodoLocalStorage();
+    });
+    sectionMoreOptions.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sectionMoreOptions.firstElementChild.classList.add("hide");
+      deleteSectionBtn.classList.remove("hide");
+    });
+  }
 
   return sectionLi;
 }
@@ -1026,6 +1059,7 @@ function createProjectDOM(project) {
   const div = document.createElement("div");
   div.insertAdjacentHTML("afterbegin", projectHTML);
   const projectEl = div.firstElementChild;
+  domProjectLinkMap.set(project, projectEl);
   projectEl.querySelector(".project-name").textContent = project.name;
   domTodoCountMap.set(
     project,
@@ -1088,6 +1122,10 @@ document.addEventListener("click", (e) => {
   ) {
     closeProjectOptions();
   }
+  document.querySelectorAll(".section .todo-more-options").forEach((el) => {
+    el.firstElementChild.classList.remove("hide");
+    el.lastElementChild.classList.add("hide");
+  });
 });
 
 function closeProjectOptions() {
@@ -1099,6 +1137,11 @@ function closeProjectOptions() {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeProjectOptions();
+
+    document.querySelectorAll(".section .todo-more-options").forEach((el) => {
+      el.firstElementChild.classList.remove("hide");
+      el.lastElementChild.classList.add("hide");
+    });
   }
 });
 
@@ -1123,4 +1166,45 @@ toggleCompleted.addEventListener("click", (e) => {
     .forEach((tasksList) => {
       tasksList.classList.toggle("hide");
     });
+});
+
+deleteProject.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  closeProjectOptions();
+  if (curProjectIndex === 0) return;
+  domProjectLinkMap.get(TodoList.projects[curProjectIndex]).remove();
+  domProjectLinkMap.delete(TodoList.projects[curProjectIndex]);
+  TodoList.removeProject(curProjectIndex);
+  curProjectIndex = 0;
+  curProject = "Inbox";
+  renderProject(TodoList.projects[0]);
+  projectOption.style.display = "";
+  savedTodoLocalStorage();
+});
+
+const toggleSidebar = document.querySelector(".toggle-sidebar");
+const sidebar = document.querySelector("#sidebar");
+toggleSidebar.addEventListener("click", () => {
+  sidebar.classList.toggle("hidden");
+  main.classList.toggle("full");
+});
+
+const openModalFormBtn = document.querySelector(".open-modal-form-btn");
+const modalFormOverlay = document.querySelector(".modal-form-container");
+
+modalForm.querySelector(".cancel-btn").addEventListener("click", () => {
+  modalFormOverlay.classList.add("hide");
+  modalForm.style.display = "";
+});
+
+openModalFormBtn.addEventListener("click", () => {
+  modalFormOverlay.classList.remove("hide");
+  modalForm.querySelector(".todo-title-input").focus();
+});
+
+modalFormOverlay.addEventListener("click", (e) => {
+  if (e.target === modalFormOverlay) {
+    modalForm.querySelector(".cancel-btn").click();
+  }
 });
