@@ -638,17 +638,22 @@ function createSectionDOM(name, idx, section) {
     function deleteSection(e) {
       e.preventDefault();
       TodoList.projects[curProjectIndex].removeSection(section);
+      populateProjectSelectorOptions();
       domTodoCountMap.get(TodoList.projects[curProjectIndex]).textContent =
         TodoList.projects[curProjectIndex].todosCount;
       section.todos.forEach((todo) => {
         if (isToday(todo.dueDate)) {
           todayTodos.deleteTodo(todo);
         }
+        if (isPast(todo.dueDate)) {
+          todayTodos.sections[0].deleteTodo(todo);
+        }
       });
       domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
-      domProjectLinkMap.delete(section);
+      if (todayTodos.sections[0].todos.length === 0) {
+        domTodoCountMap.get(todayTodos).classList.remove("overdue");
+      }
       domProjectMap.delete(section);
-      domTodoCountMap.delete(section);
       domCompletedProjectMap.delete(section);
       sectionLi.classList.add("removed");
       sectionLi.addEventListener("transitionend", () => {
@@ -1433,19 +1438,54 @@ toggleCompleted.addEventListener("click", (e) => {
     });
 });
 
-deleteProject.addEventListener("click", (e) => {
+function deleteProjectHandler(e) {
   e.preventDefault();
-  e.stopPropagation();
-  closeProjectOptions();
   if (curProjectIndex === 0) return;
-  domProjectLinkMap.get(TodoList.projects[curProjectIndex]).remove();
-  domProjectLinkMap.delete(TodoList.projects[curProjectIndex]);
+  const projectToDelete = TodoList.projects[curProjectIndex];
+  domProjectLinkMap.get(projectToDelete).remove();
+  domProjectLinkMap.delete(projectToDelete);
+  domTodoCountMap.delete(projectToDelete);
   TodoList.removeProject(curProjectIndex);
+  populateProjectSelectorOptions();
+  function fixTodayTodos(todo) {
+    if (isToday(todo.dueDate)) {
+      todayTodos.deleteTodo(todo);
+    }
+    if (isPast(todo.dueDate)) {
+      todayTodos.sections[0].deleteTodo(todo);
+    }
+  }
+  projectToDelete.todos.forEach(fixTodayTodos);
+  projectToDelete.sections.forEach((section) => {
+    section.todos.forEach(fixTodayTodos);
+  });
+  if (todayTodos.sections[0].todosCount === 0) {
+    domTodoCountMap.get(todayTodos).classList.remove("overdue");
+  }
+  domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
   curProjectIndex = 0;
   curProject = "Inbox";
   renderProject(TodoList.projects[0]);
   projectOption.style.display = "";
   savedTodoLocalStorage();
+  cancelDeleteBtn.click();
+}
+
+function cancelProjectDelete(e) {
+  e.preventDefault();
+  deleteOverlay.style.display = "none";
+  deleteModal.remove();
+  deleteConfirmBtn.removeEventListener("click", deleteProjectHandler);
+  cancelDeleteBtn.removeEventListener("click", cancelProjectDelete);
+}
+
+deleteProject.addEventListener("click", (e) => {
+  e.preventDefault();
+    deleteOverlay.style.display = "block";
+    deleteOverlay.appendChild(deleteModal);
+    deleteObjectInfo.textContent = `${TodoList.projects[curProjectIndex].name} with ${TodoList.projects[curProjectIndex].todosCount} tasks`;
+    deleteConfirmBtn.addEventListener("click", deleteProjectHandler);
+    cancelDeleteBtn.addEventListener("click", cancelProjectDelete);
 });
 
 const toggleSidebar = document.querySelector(".toggle-sidebar");
