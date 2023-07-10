@@ -637,6 +637,7 @@ function createSectionDOM(name, idx, section) {
   if (sectionMoreOptions) {
     function deleteSection(e) {
       e.preventDefault();
+      inlineForm.querySelector(".cancel-btn").click();
       TodoList.projects[curProjectIndex].removeSection(section);
       populateProjectSelectorOptions();
       domTodoCountMap.get(TodoList.projects[curProjectIndex]).textContent =
@@ -772,6 +773,10 @@ function createTodo(projectElement, todo, idx) {
   );
 
   const updateBtn = todoElement.querySelector(".edit-todo");
+  if (todo.completed) {
+    updateBtn.classList.add("hide");
+    updateBtn.disabled = true;
+  }
 
   function completeTodo(e) {
     e.stopPropagation();
