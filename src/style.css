@@ -1093,7 +1093,8 @@ dialog .checkbox svg {
     opacity: 1;
   }
 
-  .add-section-btn {
+  .add-section-btn,
+  #projects-container button {
     opacity: 1;
   }
 }
