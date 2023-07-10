@@ -21,10 +21,17 @@ import listPlugin from "@fullcalendar/list";
 let curProject = "Inbox";
 let curProjectIndex = 0;
 const todayTodos = new Project("Today");
+todayTodos.addSection("Overdue");
 const domProjectMap = new Map();
 const domCompletedProjectMap = new Map();
 const domTodoCountMap = new Map();
 const domProjectLinkMap = new Map();
+domProjectLinkMap.set(
+  todayTodos,
+  document.querySelector("#today"));
+domProjectLinkMap.set(
+  TodoList.projects[0],
+  document.querySelector("#inbox"));
 domTodoCountMap.set(
   todayTodos,
   document.querySelector("#today").querySelector(".project-todo-count span")
@@ -87,19 +94,18 @@ document.querySelectorAll(".cancel-btn").forEach((btn) => {
     e.preventDefault();
     if (!btn.form.classList.contains("modal-form")) {
       main.querySelectorAll(".add-todo-btn").forEach((button) => {
-        button.style.display = "flex";
+        button.style.display = "";
       });
     }
     btn.form.style.display = "none";
 
     const desc = btn.form.querySelector(".todo-desc-input");
     desc.textContent = "";
-    desc.nextElementSibling.style.display = "block";
-    desc.nextElementSibling.style.top = "27px";
+    desc.nextElementSibling.style.display = "";
 
     const title = btn.form.querySelector(".todo-title-input");
     title.textContent = "";
-    title.nextElementSibling.style.display = "block";
+    title.nextElementSibling.style.display = "";
 
     const date = btn.form.querySelector('input[type="date"]');
     date.value = "";
@@ -173,7 +179,9 @@ document.querySelectorAll(".add-task-btn").forEach((btn) => {
     if (+projectIdx === curProjectIndex) {
       createTodo(domProjectMap.get(todo.project), todo, idx);
     } else if (curProjectIndex === -1) {
-      createTodo(domProjectMap.get(todayTodos), todo, idx);
+      if (todo.dueDate && isToday(todo.dueDate)) {
+        createTodo(domProjectMap.get(todayTodos), todo, idx);
+      }
     }
 
     const p = +priority;
@@ -250,7 +258,7 @@ function addDateTimeClasses(input) {
 document.querySelectorAll(".duedate-input").forEach((input) => {
   input.nextElementSibling.setAttribute(
     "min",
-    new Date().toISOString().split("T")[0]
+    format(new Date(), "yyyy-MM-dd")
   );
   input.nextElementSibling.addEventListener("input", (e) => {
     removeDateTimeClasses(input);
@@ -267,7 +275,7 @@ formTextInputs.forEach((input) => {
   input.addEventListener("input", (e) => {
     const addTodo = input.closest("form").querySelector(".confirm-btn");
     if (input.textContent === "") {
-      input.nextElementSibling.style.display = "block";
+      input.nextElementSibling.style.display = "";
       if (input.classList.contains("todo-title-input")) {
         addTodo.disabled = true;
       }
@@ -293,6 +301,25 @@ document.querySelectorAll(".clear-time-input").forEach((clearTimeInput) => {
 document.querySelectorAll(".time-input").forEach((input) => {
   input.nextElementSibling.addEventListener("input", (e) => {
     if (input.nextElementSibling.value !== "") {
+      if (input.previousElementSibling.value) {
+        const date = new Date(input.previousElementSibling.value);
+        if (isToday(date)) {
+          if (!input.closest(".overdue-section") && e.isTrusted) {
+            const [inputHrs, inputMins] =
+              input.nextElementSibling.value.split(":");
+            const curHrs = new Date().getHours();
+            const curMins = new Date().getMinutes();
+
+            if (
+              +inputHrs < curHrs ||
+              (+inputHrs === curHrs && +inputMins <= curMins)
+            ) {
+              input.parentElement.querySelector(".clear-time-input").click();
+              return;
+            }
+          }
+        }
+      }
       input.nextElementSibling.nextElementSibling.style.display = "block";
       input.lastElementChild.textContent = input.nextElementSibling.value;
       if (
@@ -369,8 +396,11 @@ if (saved) {
         todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
         todo._project = section;
         const newTodo = Object.assign(new Todo(), todo);
-        if (isToday(newTodo.dueDate)) {
+        if (isToday(newTodo.dueDate) && !isPast(newTodo.dueDate)) {
           todayTodos.addTodo(newTodo);
+        }
+        if (isPast(newTodo.dueDate)) {
+          todayTodos.sections[0].addTodo(newTodo);
         }
         return newTodo;
       });
@@ -387,11 +417,15 @@ if (saved) {
       todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
       todo._project = project;
       const newTodo = Object.assign(new Todo(), todo);
-      if (isToday(newTodo.dueDate)) {
+      if (isToday(newTodo.dueDate) && !isPast(newTodo.dueDate)) {
         todayTodos.addTodo(newTodo);
+      }
+      if (isPast(newTodo.dueDate)) {
+        todayTodos.sections[0].addTodo(newTodo);
       }
       return newTodo;
     });
+
     project.completedTodos = project.completedTodos.map((todo) => {
       todo._dueDate = todo._dueDate ? new Date(todo._dueDate) : todo._dueDate;
       todo._project = project;
@@ -403,6 +437,9 @@ if (saved) {
   document.querySelector(".inbox-count span").textContent =
     TodoList.projects[0].todosCount;
   document.querySelector("#today div span").textContent = todayTodos.todosCount;
+  if (todayTodos.sections[0].todosCount !== 0) {
+    domTodoCountMap.get(todayTodos).classList.add("overdue");
+  }
 }
 domTodoCountMap.set(
   TodoList.projects[0],
@@ -458,6 +495,21 @@ cancelAddSection.form.firstElementChild.addEventListener("keydown", (e) => {
   }
 });
 
+const deleteOverlay = document.querySelector(".overlay");
+const deleteModal = document.querySelector(".delete-object-modal");
+const deleteObjectInfo = document.querySelector(".delete-object-info");
+const deleteConfirmBtn = document.querySelector(".delete-object-btn");
+const cancelDeleteBtn = document.querySelector(".cancel-delete-btn");
+deleteOverlay.addEventListener("click", (e) => {
+  if (e.target === deleteOverlay) {
+    deleteOverlay.style.display = "";
+    cancelDeleteBtn.click();
+  }
+});
+deleteModal.querySelector(".close-modal").addEventListener("click", () => {
+  cancelDeleteBtn.click();
+});
+
 function createSectionDOM(name, idx, section) {
   const div = document.createElement("div");
   div.innerHTML = liHTML;
@@ -481,50 +533,13 @@ function createSectionDOM(name, idx, section) {
   else sectionLi.querySelector(".section-name").textContent = name;
 
   const addSectionBtn = sectionLi.querySelector(".add-section-btn");
-
-  function addSectionConfirmBinding(e) {
-    e.preventDefault();
-    const sectionName = sectionNameInput.value;
-
-    let idx = TodoList.projects[curProjectIndex].sections.indexOf(section) + 1;
-    const newSection = TodoList.projects[curProjectIndex].addSection(
-      sectionName,
-      idx
-    );
-    savedTodoLocalStorage();
-    createSectionDOM(sectionName, idx + 1, newSection);
-    populateProjectSelectorOptions();
-    cancelAddSection.click();
-  }
-
-  function resetFormAndListeners(e) {
-    e.preventDefault();
-    addSectionConfirm.disabled = true;
-    addSectionForm.previousElementSibling.style.display = "";
-    addSectionForm.style.display = "none";
-    addSectionForm.remove();
-    cancelAddSection.form.firstElementChild.value = "";
-    addSectionConfirm.removeEventListener("click", addSectionConfirmBinding);
-    cancelAddSection.removeEventListener("click", resetFormAndListeners);
-  }
-
-  addSectionBtn.addEventListener("click", () => {
-    sectionLi.appendChild(addSectionForm);
-    addSectionForm.style.display = "flex";
-
-    addSectionConfirm.addEventListener("click", addSectionConfirmBinding);
-    cancelAddSection.addEventListener("click", resetFormAndListeners);
-
-    addSectionBtn.style.display = "none";
-    addSectionForm.querySelector("input").focus();
-  });
-
   const addTodoBtn = sectionLi.querySelector(".add-todo-btn");
-  addTodoBtn.addEventListener("click", () => {
+
+  function addTodoBtnClick(e) {
     addTodoBtn.closest("li").appendChild(inlineForm);
     const dateInputBtn = inlineForm.querySelector(".duedate-input");
 
-    if (curProject === "Today") {
+    if (curProjectIndex === -1) {
       dateInputBtn.lastElementChild.textContent = "Today";
       dateInputBtn.classList.add("today");
       dateInputBtn.nextElementSibling.value = new Date()
@@ -550,7 +565,61 @@ function createSectionDOM(name, idx, section) {
     main.querySelectorAll(".add-todo-btn").forEach((btn) => {
       btn.style.display = "none";
     });
-  });
+  }
+
+  if (curProjectIndex !== -1) {
+    function addSectionConfirmBinding(e) {
+      e.preventDefault();
+      const sectionName = sectionNameInput.value;
+
+      let idx =
+        TodoList.projects[curProjectIndex].sections.indexOf(section) + 1;
+      const newSection = TodoList.projects[curProjectIndex].addSection(
+        sectionName,
+        idx
+      );
+      savedTodoLocalStorage();
+      createSectionDOM(sectionName, idx + 1, newSection);
+      populateProjectSelectorOptions();
+      cancelAddSection.click();
+    }
+
+    function resetFormAndListeners(e) {
+      e.preventDefault();
+      addSectionConfirm.disabled = true;
+      addSectionForm.previousElementSibling.style.display = "";
+      addSectionForm.style.display = "none";
+      addSectionForm.remove();
+      cancelAddSection.form.firstElementChild.value = "";
+      addSectionConfirm.removeEventListener("click", addSectionConfirmBinding);
+      cancelAddSection.removeEventListener("click", resetFormAndListeners);
+    }
+
+    addSectionBtn.addEventListener("click", () => {
+      sectionLi.appendChild(addSectionForm);
+      addSectionForm.style.display = "flex";
+
+      addSectionConfirm.addEventListener("click", addSectionConfirmBinding);
+      cancelAddSection.addEventListener("click", resetFormAndListeners);
+
+      addSectionBtn.style.display = "none";
+      addSectionForm.querySelector("input").focus();
+    });
+
+    addTodoBtn.addEventListener("click", addTodoBtnClick);
+  } else {
+    if (name !== "") {
+      addTodoBtn.parentElement.remove();
+      sectionLi.classList.add("overdue-section");
+      if (section.todos.length === 0) {
+        sectionLi.remove();
+      }
+    } else {
+      addTodoBtn.addEventListener("click", addTodoBtnClick);
+    }
+    addSectionBtn.remove();
+  }
+
   const tasksList = sectionLi.querySelector(".tasks-list:first-of-type");
   const completedTasksList = sectionLi.querySelector(".completed-tasks-list");
   if (completedShown) {
@@ -566,10 +635,8 @@ function createSectionDOM(name, idx, section) {
 
   const sectionMoreOptions = sectionLi.querySelector(".todo-more-options");
   if (sectionMoreOptions) {
-    const deleteSectionBtn = sectionMoreOptions.lastElementChild;
-    deleteSectionBtn.addEventListener("click", (e) => {
+    function deleteSection(e) {
       e.preventDefault();
-      e.stopPropagation();
       TodoList.projects[curProjectIndex].removeSection(section);
       domTodoCountMap.get(TodoList.projects[curProjectIndex]).textContent =
         TodoList.projects[curProjectIndex].todosCount;
@@ -588,10 +655,28 @@ function createSectionDOM(name, idx, section) {
         sectionLi.remove();
       });
       savedTodoLocalStorage();
+      cancelDeleteBtn.click();
+    }
+
+    function cancelSectionDelete(e) {
+      e.preventDefault();
+      deleteOverlay.style.display = "none";
+      deleteModal.remove();
+      deleteConfirmBtn.removeEventListener("click", deleteSection);
+      cancelDeleteBtn.removeEventListener("click", cancelSectionDelete);
+    }
+
+    const deleteSectionBtn = sectionMoreOptions.lastElementChild;
+    deleteSectionBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      deleteOverlay.style.display = "block";
+      deleteOverlay.appendChild(deleteModal);
+      deleteObjectInfo.textContent = `${section.name} with ${section.todosCount} tasks`;
+      deleteConfirmBtn.addEventListener("click", deleteSection);
+      cancelDeleteBtn.addEventListener("click", cancelSectionDelete);
     });
     sectionMoreOptions.addEventListener("click", (e) => {
       e.preventDefault();
-      e.stopPropagation();
       sectionMoreOptions.firstElementChild.classList.add("hide");
       deleteSectionBtn.classList.remove("hide");
     });
@@ -683,7 +768,8 @@ function createTodo(projectElement, todo, idx) {
 
   const updateBtn = todoElement.querySelector(".edit-todo");
 
-  function completeTodo() {
+  function completeTodo(e) {
+    e.stopPropagation();
     const project = TodoList.projects.find(
       (project) =>
         project.todos.indexOf(todo) !== -1 ||
@@ -691,8 +777,15 @@ function createTodo(projectElement, todo, idx) {
     );
     todo.project.completeTodo(todo.project.todos.indexOf(todo));
     todoElement.classList.add("removed");
+    if (isPast(todo.dueDate)) {
+      todayTodos.sections[0].deleteTodo(todo);
+    }
     function handleTransitionEnd() {
       domTodoCountMap.get(project).textContent = project.todosCount;
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
+      if (todayTodos.sections[0].todosCount === 0) {
+        domTodoCountMap.get(todayTodos).classList.remove("overdue");
+      }
       if (curProjectIndex !== -1) {
         domCompletedProjectMap
           .get(todo.project)
@@ -722,7 +815,8 @@ function createTodo(projectElement, todo, idx) {
     savedTodoLocalStorage();
   }
 
-  function uncompleteTodo() {
+  function uncompleteTodo(e) {
+    e.stopPropagation();
     const project = TodoList.projects.find(
       (project) =>
         project.completedTodos.indexOf(todo) !== -1 ||
@@ -731,9 +825,16 @@ function createTodo(projectElement, todo, idx) {
         )
     );
     todo.project.uncompleteTodo(todo.project.completedTodos.indexOf(todo));
+    if (isPast(todo.dueDate)) {
+      todayTodos.sections[0].addTodo(todo);
+    }
     todoElement.classList.add("removed");
     function handleTransitionEnd() {
       domTodoCountMap.get(project).textContent = project.todosCount;
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
+      if (todayTodos.sections[0].todosCount !== 0) {
+        domTodoCountMap.get(todayTodos).classList.add("overdue");
+      }
       domProjectMap
         .get(todo.project)
         .insertBefore(
@@ -761,14 +862,28 @@ function createTodo(projectElement, todo, idx) {
     savedTodoLocalStorage();
   }
 
-  const deleteBtn = todoElement.querySelector(".delete");
-  deleteBtn.addEventListener("click", () => {
-    const project = TodoList.projects.find(
-      (project) =>
-        project.todos.indexOf(todo) !== -1 ||
-        project.sections.find((section) => section.todos.indexOf(todo) !== -1)
-    );
-    todo.project.deleteTodo(todo);
+  function deleteTodo() {
+    const project = TodoList.projects.find((project) => {
+      if (!todo.completed) {
+        return (
+          project.todos.indexOf(todo) !== -1 ||
+          project.sections.find((section) => section.todos.indexOf(todo) !== -1)
+        );
+      } else {
+        return (
+          project.completedTodos.indexOf(todo) !== -1 ||
+          project.sections.find(
+            (section) => section.completedTodos.indexOf(todo) !== -1
+          )
+        );
+      }
+    });
+
+    if (!todo.completed) {
+      todo.project.deleteTodo(todo);
+    } else {
+      todo.project.deleteCompletedTodo(todo);
+    }
     domTodoCountMap.get(project).textContent = project.todosCount;
     if (todo.dueDate && isToday(todo.dueDate)) {
       todayTodos.deleteTodo(todo);
@@ -779,6 +894,25 @@ function createTodo(projectElement, todo, idx) {
     todoElement.addEventListener("transitionend", () => {
       todoElement.remove();
     });
+    cancelDeleteBtn.click();
+  }
+
+  function cancelDeleteTodo() {
+    deleteConfirmBtn.removeEventListener("click", deleteTodo);
+    cancelDeleteBtn.removeEventListener("click", cancelDeleteTodo);
+    deleteOverlay.style.display = "";
+    deleteModal.remove();
+  }
+
+  const deleteBtn = todoElement.querySelector(".delete");
+  deleteBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    deleteOverlay.style.display = "block";
+    deleteOverlay.appendChild(deleteModal);
+    deleteObjectInfo.textContent = todo.title;
+    deleteConfirmBtn.addEventListener("click", deleteTodo);
+    cancelDeleteBtn.addEventListener("click", cancelDeleteTodo);
   });
 
   function updateTodo(e) {
@@ -800,6 +934,10 @@ function createTodo(projectElement, todo, idx) {
     const oldProject = todo.project;
     const oldDuedate = todo.dueDate;
 
+    // if (isPast(new Date(dueDate + " " + dueTime))) {
+    //   return;
+    // }
+
     todo.title = title;
     todo.description = description;
     todo.dueDate = dueDate ? new Date(dueDate + " " + dueTime) : null;
@@ -816,6 +954,14 @@ function createTodo(projectElement, todo, idx) {
     if (svg) svg.remove();
     if (todo.dueDate && !todo.dueTime) {
       todo.dueDate = endOfDay(todo.dueDate);
+    }
+
+    if (isPast(oldDuedate) && !isEqual(oldDuedate, todo.dueDate) && !isPast(todo.dueDate)) {
+      todayTodos.sections[0].deleteTodo(todo);
+      domTodoCountMap.get(todayTodos).textContent = todayTodos.todosCount;
+      if (todayTodos.sections[0].todosCount === 0) {
+        domTodoCountMap.get(todayTodos).classList.remove("overdue");
+      }
     }
     if (todo.dueDate && isToday(todo.dueDate) && !isToday(oldDuedate)) {
       todayTodos.addTodo(todo);
@@ -836,6 +982,7 @@ function createTodo(projectElement, todo, idx) {
       todayTodos.deleteTodo(todo);
       todayTodos.addTodo(todo);
     }
+
     if (curProjectIndex !== +projectIdx) {
       if (
         curProjectIndex !== -1 ||
@@ -848,12 +995,32 @@ function createTodo(projectElement, todo, idx) {
       domTodoCountMap.get(oldProject_).textContent = oldProject_.todosCount;
       domTodoCountMap.get(TodoList.projects[+projectIdx]).textContent =
         todo.project.todosCount;
-      if (curProjectIndex === -1 && !isEqual(oldDuedate, todo.dueDate)) {
-        todoElement.parentElement.insertBefore(
-          todoElement,
-          todoElement.parentElement.children[todayTodos.todos.indexOf(todo)]
-        );
+      if (
+        curProjectIndex === -1 &&
+        !isEqual(oldDuedate, todo.dueDate) &&
+        isToday(todo.dueDate)
+      ) {
+        if (isPast(oldDuedate)) {
+          domProjectMap
+            .get(todayTodos)
+            .insertBefore(
+              todoElement,
+              domProjectMap.get(todayTodos).children[
+                todayTodos.todos.indexOf(todo)
+              ]
+            );
+        } else {
+          domProjectMap
+            .get(todayTodos)
+            .insertBefore(
+              todoElement,
+              domProjectMap.get(todayTodos).children[
+                todayTodos.todos.indexOf(todo)
+              ]
+            );
+        }
       }
+      removeDateTimeClasses(todoElement.querySelector(".due-date"));
       syncTodoWithTodoDOM(todoElement, todo);
     } else {
       if (oldProject !== todo.project) {
@@ -897,7 +1064,8 @@ function createTodo(projectElement, todo, idx) {
     updateTodoForm.remove();
   }
 
-  function bindUpdateFormTodo() {
+  function bindUpdateFormTodo(e) {
+    e.stopPropagation();
     todoElement.parentElement.insertBefore(updateTodoForm, todoElement);
     updateTodoForm.style.display = "block";
     const event = new Event("input");
@@ -966,6 +1134,90 @@ function createTodo(projectElement, todo, idx) {
   }
 
   updateBtn.addEventListener("click", bindUpdateFormTodo);
+
+  function showDialog() {
+    const dialog = document.querySelector("dialog");
+    dialog.querySelector(".todo-title-big").textContent = todo.title;
+    dialog.querySelector(".todo-desc-big").textContent = todo.description;
+    const project =
+      TodoList.projects.find(
+        (project) =>
+          project.todos.indexOf(todo) !== -1 ||
+          project.sections.find((section) => section.todos.indexOf(todo) !== -1)
+      ) ||
+      TodoList.projects.find(
+        (project) =>
+          project.completedTodos.indexOf(todo) !== -1 ||
+          project.sections.find(
+            (section) => section.completedTodos.indexOf(todo) !== -1
+          )
+      );
+    if (project === todo.project) {
+      dialog.querySelector(".todo-project-big").textContent = todo.project.name;
+    } else {
+      dialog.querySelector(
+        ".todo-project-big"
+      ).textContent = `${project.name}/${todo.project.name}`;
+    }
+    const dateElement = dialog.querySelector(".todo-display-date");
+    dateElement.textContent = "None";
+    dialog.querySelector(".todo-display-time").textContent = "";
+    removeDateTimeClasses(dateElement.parentElement);
+    if (todo.dueDate) {
+      const today = new Date();
+      const nextWeek = endOfDay(addDays(today, 7));
+      if (isToday(todo.dueDate)) {
+        dateElement.textContent = "Today";
+        dateElement.parentElement.classList.add("today");
+      } else if (isTomorrow(todo.dueDate)) {
+        dateElement.textContent = "Tomorrow";
+        dateElement.parentElement.classList.add("tomorrow");
+      } else if (
+        isWithinInterval(todo.dueDate, { start: today, end: nextWeek })
+      ) {
+        dateElement.textContent = format(todo.dueDate, "EEEE");
+        dateElement.parentElement.classList.add("this-week");
+      } else {
+        dateElement.textContent = format(todo.dueDate, "MMM d, yyyy");
+      }
+      if (isPast(todo.dueDate)) {
+        dateElement.parentElement.classList.add("overdue");
+      }
+      if (todo.dueTime) {
+        const time = new Intl.DateTimeFormat(navigator.language, {
+          hour: "numeric",
+          minute: "numeric",
+        }).format(todo.dueDate);
+
+        dialog.querySelector(".todo-display-time").textContent = time;
+      }
+    }
+    const priority = dialog.querySelector(".todo-display-priority");
+    priority.parentElement.classList.remove(
+      "checkbox-p1",
+      "checkbox-p2",
+      "checkbox-p3"
+    );
+    priority.textContent = `Priority ${todo.priority}`;
+    priority.parentElement.classList.add(`checkbox-p${todo.priority}`);
+    dialog
+      .querySelector(".checkbox")
+      .classList.remove(
+        "completed",
+        "checkbox-p1",
+        "checkbox-p2",
+        "checkbox-p3"
+      );
+    dialog
+      .querySelector(".checkbox")
+      .classList.add(`checkbox-p${todo.priority}`);
+    if (todo.completed) {
+      dialog.querySelector(".checkbox").classList.add("completed");
+    }
+    dialog.showModal();
+  }
+
+  todoElement.addEventListener("click", showDialog);
 }
 
 window.addEventListener("load", () => {
@@ -998,10 +1250,14 @@ sectionNameInput.addEventListener("input", (e) => {
 const leftMenu = document.querySelector("#sidebar > ul:first-of-type");
 leftMenu.addEventListener("click", (e) => {
   e.preventDefault();
-  let clicked = e.target;
-  if (clicked) {
-    clicked = clicked.closest("li");
-  } else return;
+  let clicked = e.target.closest("li");
+  if (!clicked) {
+    return;
+  }
+  domProjectLinkMap.forEach((link) => {
+    link.classList.remove("active");
+  });
+  clicked.classList.add("active");
   if (clicked.id === "inbox") {
     if (curProjectIndex !== 0) {
       projectOption.style.display = "";
@@ -1068,7 +1324,10 @@ function createProjectDOM(project) {
   projectEl.querySelector(".project-todo-count span").textContent =
     project.todosCount;
   projectContainer.append(projectEl);
-  projectEl.addEventListener("click", () => {
+  projectEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    domProjectLinkMap.forEach((el) => el.classList.remove("active"));
+    projectEl.classList.add("active");
     renderProject(project);
     projectOption.style.display = "";
   });
@@ -1122,10 +1381,13 @@ document.addEventListener("click", (e) => {
   ) {
     closeProjectOptions();
   }
-  document.querySelectorAll(".section .todo-more-options").forEach((el) => {
-    el.firstElementChild.classList.remove("hide");
-    el.lastElementChild.classList.add("hide");
-  });
+  const closest = e.target.closest(".todo-more-options:not(.project-option)");
+  if (!closest) {
+    document.querySelectorAll(".section .todo-more-options").forEach((el) => {
+      el.firstElementChild.classList.remove("hide");
+      el.lastElementChild.classList.add("hide");
+    });
+  }
 });
 
 function closeProjectOptions() {
@@ -1142,6 +1404,9 @@ document.addEventListener("keydown", (e) => {
       el.firstElementChild.classList.remove("hide");
       el.lastElementChild.classList.add("hide");
     });
+    if (!modalFormOverlay.classList.contains("hide")) {
+      modalForm.querySelector(".cancel-btn").click();
+    }
   }
 });
 
@@ -1198,7 +1463,9 @@ modalForm.querySelector(".cancel-btn").addEventListener("click", () => {
   modalForm.style.display = "";
 });
 
-openModalFormBtn.addEventListener("click", () => {
+openModalFormBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   modalFormOverlay.classList.remove("hide");
   modalForm.querySelector(".todo-title-input").focus();
 });
@@ -1207,4 +1474,11 @@ modalFormOverlay.addEventListener("click", (e) => {
   if (e.target === modalFormOverlay) {
     modalForm.querySelector(".cancel-btn").click();
   }
+});
+
+const collapseProjectsBtn = document.querySelector(".collapse-projects");
+const projectsList = document.querySelector(".projects-list");
+collapseProjectsBtn.addEventListener("click", () => {
+  collapseProjectsBtn.classList.toggle("collapsed");
+  projectsList.classList.toggle("hide");
 });

@@ -183,6 +183,11 @@ ul li {
   border-radius: 5px;
 }
 
+#sidebar ul > li.active {
+  background-color: #eee;
+  border-radius: 5px;
+}
+
 #projects-heading-container {
   border-radius: 5px;
   box-sizing: border-box;
@@ -229,31 +234,33 @@ ul li {
 
 #sidebar:hover #projects-container button:hover {
   color: rgb(26, 26, 26);
-  /* transform: rotate(90deg); */
 }
 
 .container {
   display: flex;
+  height: calc(100vh - 44px);
+  width: 100vw;
+  overflow: auto;
 }
 
-main {
-  width: calc(100vw - 221px);
+.container > main {
   margin-left: 221px;
   transition: all 0.2s ease-in;
+  width: calc(100vw - 221px);
 }
 
-main.full {
+.container > main.full {
   margin-left: calc(221px / 2);
   margin-right: calc(221px / 2);
 }
 
-main > div {
+.container > main > div {
   padding: 0 55px;
 }
 
 #main-header {
   position: sticky;
-  top: 44px;
+  top: 0;
   left: 0;
   display: flex;
   justify-content: space-between;
@@ -385,7 +392,7 @@ input[type="time"] {
 }
 
 .overdue {
-  color: rgb(209, 69, 59);
+  color: rgb(209, 69, 59) !important;
 }
 
 .todo-info {
@@ -453,6 +460,7 @@ button.todo-more-options {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow: auto;
 }
 
 .todo-title {
@@ -602,6 +610,7 @@ button.todo-more-options {
 .todo-input-text {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .todo-input-text {
@@ -708,7 +717,7 @@ button.todo-more-options {
 .cancel-btn,
 .cancel-update-btn,
 .cancel-section,
-.cancel-delete-todo,
+.cancel-delete-btn,
 .add-project-cancel {
   background-color: rgb(245, 245, 245);
   color: rgb(68, 68, 68);
@@ -717,7 +726,7 @@ button.todo-more-options {
 .cancel-btn:hover,
 .cancel-update-btn:hover,
 .cancel-section:hover,
-.cancel-delete-todo:hover,
+.cancel-delete-btn:hover,
 .add-project-cancel:hover {
   background-color: rgb(229, 229, 229);
   color: rgb(26, 26, 26);
@@ -726,7 +735,7 @@ button.todo-more-options {
 .add-task-btn,
 .update-task-btn,
 .add-section-confirm,
-.delete-todo-btn,
+.delete-object-btn,
 .add-project-confirm {
   background-color: rgb(219, 76, 63);
   color: white;
@@ -742,7 +751,7 @@ button.todo-more-options {
 .add-task-btn:not(:disabled):hover,
 .update-task-btn:not(:disabled):hover,
 .add-section-confirm:not(:disabled):hover,
-.delete-todo-btn:not(:disabled):hover,
+.delete-object-btn:not(:disabled):hover,
 .add-project-confirm:not(:disabled):hover {
   background-color: #b03d32;
 }
@@ -750,7 +759,7 @@ button.todo-more-options {
 .add-task-btn.active:hover,
 .update-task-btn.active:hover,
 .add-section-confirm.active:hover,
-.delete-todo-btn.active:hover {
+.delete-object-btn.active:hover {
   background-color: rgb(176, 61, 50);
 }
 
@@ -767,7 +776,6 @@ button.todo-more-options {
 }
 
 .form {
-  width: 550px;
   display: none;
   padding: 15px;
 }
@@ -857,7 +865,7 @@ button.todo-more-options {
   display: none;
 }
 
-.delete-task-modal {
+.delete-object-modal {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -962,4 +970,145 @@ button.todo-more-options {
 
 .completed-tasks-list:not(:empty) {
   margin-top: 15px;
+}
+
+.collapse-projects.collapsed {
+  transform: rotate(-90deg);
+}
+
+.overdue-section {
+  margin-top: 20px;
+}
+
+.delete-object-info {
+  font-weight: bold;
+}
+
+dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: none;
+  border-radius: 20px;
+  padding: 20px;
+  width: min(700px, 90vw);
+  max-height: 80vh;
+  min-height: 250px;
+  outline: none;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+dialog::backdrop {
+  backdrop-filter: blur(5px);
+}
+
+dialog main {
+  gap: 20px !important;
+}
+
+.todo-display-column:first-child {
+  flex: 2;
+  overflow: auto;
+}
+
+.todo-display-column:last-child {
+  flex: 1;
+}
+
+.todo-display-column:first-child > div {
+  gap: 15px;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.todo-title-big {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 25px;
+}
+
+.todo-title-desc {
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.5;
+}
+
+.todo-display-heading {
+  color: grey;
+  font-weight: bold;
+  font-size: 14px;
+  height: 28px;
+  line-height: 28px;
+}
+
+.todo-display-heading + .flex-row {
+  align-items: center;
+}
+
+dialog .checkbox {
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+dialog .checkbox svg {
+  height: 18px;
+  width: 18px;
+  margin-left: -5px;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .container > main {
+    margin-left: auto;
+    margin-right: auto;
+    width: 90vw;
+  }
+
+  .container > main.full {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #sidebar.hidden {
+    transform: none;
+  }
+
+  #sidebar {
+    transform: translateX(-221px);
+    z-index: 1000;
+  }
+
+  #main-header {
+    justify-content: flex-end;
+  }
+
+  #main-header > h1 {
+    margin: auto;
+  }
+
+  .todo-options {
+    opacity: 1;
+  }
+
+  .add-section-btn {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .container > main > div {
+    padding: 0 25px;
+  }
+
+  #main-header {
+    padding-left: 25px;
+    padding-right: 25px;
+  }
+
+  dialog main {
+    flex-direction: column;
+  }
 }
